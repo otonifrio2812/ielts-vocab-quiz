@@ -1,0 +1,2549 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS 互動式字彙考題 (1-100 題)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { primary: '#2563eb', secondary: '#10b981', alert: '#ef4444' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        .font-serif-en { font-family: 'Georgia', 'Merriweather', serif; }
+        .font-mono-kk { font-family: 'Courier New', monospace; }
+        /* 自訂捲軸 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background-color: #475569; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+    <div id="app" class="flex flex-col md:flex-row h-screen overflow-hidden">
+        
+        <!-- 左側選單 -->
+        <aside class="w-full md:w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0 transition-all">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h1 class="text-xl font-bold text-primary dark:text-blue-400">IELTS Vocab</h1>
+                <button onclick="toggleMobileMenu()" class="md:hidden text-gray-500 text-2xl">☰</button>
+            </div>
+            <div id="sidebar-menu" class="hidden md:flex flex-col overflow-y-auto flex-1 p-4 space-y-4">
+                <div>
+                    <button onclick="switchMode('ALL')" id="btn-mode-all" class="w-full text-left font-bold p-2 rounded bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200">
+                        📚 全部題目 (1-100)
+                    </button>
+                </div>
+                <div>
+                    <button onclick="switchMode('MISTAKES')" id="btn-mode-mistakes" class="w-full text-left font-bold p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                        ❌ 我的錯題本 (<span id="mistake-count">0</span>)
+                    </button>
+                </div>
+                <hr class="border-gray-200 dark:border-gray-700">
+                <div>
+                    <h3 class="text-xs uppercase text-gray-500 font-semibold mb-2">學習進度</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-1">
+                        <div id="progress-bar-fill" class="bg-primary h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">答題進度: <span id="progress-text">0/100</span></p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">答對率: <span id="accuracy-text">0%</span></p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主內容區 -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+            
+            <!-- 頂部控制列 -->
+            <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex flex-wrap justify-between items-center gap-2 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-lg text-gray-700 dark:text-gray-200" id="header-title">Question 1</span>
+                    <span id="badge-type" class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded dark:bg-blue-900 dark:text-blue-200">MC</span>
+                    <span id="badge-category" class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded dark:bg-gray-700 dark:text-gray-300">Category</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <select id="setting-accent" onchange="updateSettings()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-blue-500 p-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="en-US">🇺🇸 美音</option>
+                        <option value="en-GB">🇬🇧 英音</option>
+                    </select>
+                    <select id="setting-speed" onchange="updateSettings()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-blue-500 p-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="0.7">🐢 慢速</option>
+                        <option value="0.9" selected>🚶 正常</option>
+                        <option value="1.0">🏃 原速</option>
+                    </select>
+                    <button onclick="toggleDarkMode()" class="text-xl p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" title="切換深淺色">🌓</button>
+                </div>
+            </header>
+
+            <!-- 考題與解析區 -->
+            <div id="quiz-scroll-area" class="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50 dark:bg-gray-900 pb-24">
+                <div class="max-w-3xl mx-auto space-y-6">
+                    
+                    <!-- 題目卡片 -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                        <div class="flex items-start gap-3">
+                            <button onclick="speakCurrentQuestion()" class="text-2xl mt-1 hover:scale-110 transition-transform">🔊</button>
+                            <div>
+                                <h2 id="q-en" class="text-2xl font-serif-en font-medium text-gray-900 dark:text-white leading-relaxed"></h2>
+                                <p id="q-zh" class="text-gray-500 dark:text-gray-400 mt-2"></p>
+                            </div>
+                        </div>
+
+                        <!-- 互動選項區 -->
+                        <div id="options-container" class="mt-6 space-y-3">
+                            <!-- JS 動態生成 -->
+                        </div>
+                        
+                        <div class="mt-6">
+                            <button id="btn-submit" onclick="submitAnswer()" class="w-full md:w-auto bg-primary hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition-colors">
+                                提交答案
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 解析卡片 (預設隱藏) -->
+                    <div id="explanation-card" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                        <div id="result-banner" class="flex items-center gap-2 font-bold text-lg mb-4">
+                            <!-- 對錯結果 -->
+                        </div>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded border border-gray-100 dark:border-gray-600">
+                                <h4 class="font-bold text-gray-700 dark:text-gray-200">💡 解答解析</h4>
+                                <p id="exp-text" class="text-gray-600 dark:text-gray-300 mt-1"></p>
+                            </div>
+                            
+                            <div id="vocab-section" class="space-y-4 mt-4">
+                                <!-- 單字解析動態生成 -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 底部控制列 -->
+            <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center gap-4 absolute bottom-0 w-full z-10">
+                <button onclick="prevQuestion()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors">上一題</button>
+                <button onclick="randomQuestion()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors hidden md:block">隨機跳題</button>
+                <button onclick="resetProgress()" class="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-800 transition-colors hidden md:block">重置成績</button>
+                <button onclick="nextQuestion()" class="px-4 py-2 bg-primary text-white rounded hover:bg-blue-700 transition-colors">下一題</button>
+            </footer>
+
+        </main>
+    </div>
+
+    <script>
+        // ================= 資料區：1-35 題 =================
+        const questionsData = [
+            {
+                id: 1, type: "MC", category: "Addition, equation & conclusion", source_page: 1,
+                question_en: "Tourism brings much-needed money to developing countries. __________, it provides employment for the local population.",
+                question_zh: "旅遊業為開發中國家帶來了急需的資金。__________，它也為當地人口提供了就業機會。",
+                options: [
+                    { label: "A", text: "Furthermore", kk: "[ˋfɝðɚˏmor]" },
+                    { label: "B", text: "Similarly", kk: "[ˋsɪməlɚlɪ]" },
+                    { label: "C", text: "Therefore", kk: "[ˋðɛrˏfor]" },
+                    { label: "D", text: "Nevertheless", kk: "[ˏnɛvɚðəˋlɛs]" }
+                ],
+                answer: "A", answer_explanation_zh: "furthermore (此外) 用於補充說明，符合前後兩句「帶來資金」與「提供就業」的正面遞進關係。",
+                key_vocabulary: [{
+                    word: "furthermore", kk: "[ˋfɝðɚˏmor]", ipa: "/ˌfɜːðəˈmɔː/", part_of_speech: "adv.", meaning_zh: "此外；而且",
+                    phrase_examples: [
+                        { en: "The house is beautiful, and furthermore, it's in a great location.", zh: "這間房子很美，此外，它的地段也很好。" },
+                        { en: "He said he had not been involved, and furthermore, he had an alibi.", zh: "他說他沒有參與，而且他有不在場證明。" }
+                    ],
+                    collocations: ["and furthermore", "furthermore it is..."], synonyms: ["moreover", "in addition", "besides"]
+                }],
+                ielts_tip_zh: "在 Writing Task 2 中，使用 furthermore 可以有效地連接支持論點，展現連貫性與高階語彙能力。"
+            },
+            {
+                id: 2, type: "FILL", category: "Around the world", source_page: 2,
+                question_en: "Japan, Korea and Taiwan are all in ________.",
+                question_zh: "日本、韓國和台灣都位於________。",
+                options: [
+                    { label: "the Near East", text: "近東" },
+                    { label: "the Middle East", text: "中東" },
+                    { label: "the Far East", text: "遠東" },
+                    { label: "Australasia", text: "大洋洲" }
+                ],
+                answer: "the Far East", answer_explanation_zh: "東亞國家（如日、韓、台）在地理與文化區分上被稱為 the Far East（遠東）。",
+                key_vocabulary: [{
+                    word: "the Far East", kk: "[ðə fɑr ist]", ipa: "/ðə fɑːr iːst/", part_of_speech: "n.", meaning_zh: "遠東（指東亞與東南亞國家）",
+                    phrase_examples: [
+                        { en: "He exports machinery to the Far East.", zh: "他將機械出口到遠東地區。" },
+                        { en: "The company trades primarily in the Far East.", zh: "該公司主要在遠東進行貿易。" }
+                    ],
+                    collocations: ["travel to the Far East", "markets in the Far East"], synonyms: ["East Asia"]
+                }],
+                ielts_tip_zh: "IELTS 聽力或閱讀常出現區域地理名詞，需熟悉這些地區涵蓋的國家範圍。"
+            },
+            {
+                id: 3, type: "MC", category: "Changes 1", source_page: 3,
+                question_en: "For the first four months, visitor numbers to the town ________, but then dropped sharply in the final month.",
+                question_zh: "在前四個月裡，該鎮的遊客數量________，但在最後一個月急劇下降。",
+                options: [
+                    { label: "A", text: "remained constant", kk: "[rɪˋmend ˋkɑnstənt]" },
+                    { label: "B", text: "fluctuated", kk: "[ˋflʌktʃʊˏetɪd]" },
+                    { label: "C", text: "peaked", kk: "[pikt]" },
+                    { label: "D", text: "declined", kk: "[dɪˋklaɪnd]" }
+                ],
+                answer: "B", answer_explanation_zh: "fluctuate (波動) 代表數據上下起伏，常用於描述圖表中不穩定的趨勢。",
+                key_vocabulary: [{
+                    word: "fluctuate", kk: "[ˋflʌktʃʊˏet]", ipa: "/ˈflʌktʃueɪt/", part_of_speech: "v.", meaning_zh: "波動；起伏不定",
+                    phrase_examples: [
+                        { en: "Vegetable prices fluctuate according to the season.", zh: "蔬菜價格隨季節波動。" },
+                        { en: "His mood fluctuates wildly from day to day.", zh: "他的情緒每天起伏很大。" }
+                    ],
+                    collocations: ["fluctuate wildly", "fluctuate between"], synonyms: ["vary", "swing", "change"]
+                }],
+                ielts_tip_zh: "Writing Task 1 描寫圖表必備動詞，形容數據時高時低。"
+            },
+            {
+                id: 4, type: "TF", category: "Changes 2", source_page: 5,
+                question_en: "The weather deteriorate rapidly when it started raining and the winds picked up.",
+                question_zh: "開始下雨且風勢增強時，天氣迅速惡化。（請判斷「deteriorate」的時態用法是否正確）",
+                options: [
+                    { label: "True", text: "用法正確" },
+                    { label: "False", text: "用法錯誤" }
+                ],
+                answer: "False", answer_explanation_zh: "因為後半句為過去式 'started raining'，此處應使用過去式 'deteriorated'。",
+                key_vocabulary: [{
+                    word: "deteriorate", kk: "[dɪˋtɪrɪəˏret]", ipa: "/dɪˈtɪəriəreɪt/", part_of_speech: "v.", meaning_zh: "惡化",
+                    phrase_examples: [
+                        { en: "Her health deteriorated rapidly, and she died shortly afterwards.", zh: "她的健康狀況迅速惡化，不久便過世了。" },
+                        { en: "Relations between the two countries have deteriorated sharply.", zh: "兩國關係急劇惡化。" }
+                    ],
+                    collocations: ["deteriorate rapidly", "condition deteriorates"], synonyms: ["worsen", "decline"]
+                }],
+                ielts_tip_zh: "常出現於描述環境、健康或經濟變差的文章中；寫作時注意時態一致性。"
+            },
+            {
+                id: 5, type: "FILL", category: "Condition", source_page: 7,
+                question_en: "You can borrow my dictionary ________ you return it before you go home.",
+                question_zh: "你可以借我的字典，________你回家前歸還。",
+                options: [
+                    { label: "providing that", text: "只要；條件是" },
+                    { label: "unless", text: "除非" },
+                    { label: "no matter how", text: "無論如何" },
+                    { label: "wherever", text: "無論何地" }
+                ],
+                answer: "providing that", answer_explanation_zh: "providing that (條件是；只要) 引導條件子句，等同於 as long as。",
+                key_vocabulary: [{
+                    word: "providing that", kk: "[prəˋvaɪdɪŋ ðæt]", ipa: "/prəˈvaɪdɪŋ ðæt/", part_of_speech: "conj.", meaning_zh: "只要；條件是",
+                    phrase_examples: [
+                        { en: "You can go out providing that you finish your homework first.", zh: "只要你先寫完作業就可以出去。" },
+                        { en: "We'll be there at about 7.30, providing that there's a suitable train.", zh: "只要有合適的火車，我們大約七點半會到。" }
+                    ],
+                    collocations: ["providing that you...", "providing (that)"], synonyms: ["provided that", "as long as", "on condition that"]
+                }],
+                ielts_tip_zh: "Writing Task 2 中可用來取代 if 或 as long as，增加句型多樣性。"
+            },
+            {
+                id: 6, type: "MC", category: "Confusing words & false friends 1", source_page: 8,
+                question_en: "Widening the road made an ________ difference to the flow of traffic.",
+                question_zh: "拓寬道路對車流產生了________（顯著的）差異。",
+                options: [
+                    { label: "A", text: "appreciative", kk: "[əˋpriʃɪətɪv]" },
+                    { label: "B", text: "appreciable", kk: "[əˋpriʃɪəb!]" },
+                    { label: "C", text: "appreciated", kk: "[əˋpriʃɪˏetɪd]" },
+                    { label: "D", text: "approachable", kk: "[əˋprotʃəb!]" }
+                ],
+                answer: "B", answer_explanation_zh: "appreciable 指「明顯的、可察覺的」；而 appreciative 意為「感激的、有鑑賞力的」，兩者易混淆。",
+                key_vocabulary: [{
+                    word: "appreciable", kk: "[əˋpriʃɪəb!]", ipa: "/əˈpriːʃəbl/", part_of_speech: "adj.", meaning_zh: "明顯的；可察覺的",
+                    phrase_examples: [
+                        { en: "There has been no appreciable change in the patient's condition.", zh: "病人的情況沒有明顯的改變。" },
+                        { en: "The new rules will make an appreciable difference to our working lives.", zh: "新規定將對我們的工作生活產生顯著的影響。" }
+                    ],
+                    collocations: ["appreciable difference", "appreciable effect"], synonyms: ["significant", "noticeable", "considerable"]
+                }],
+                ielts_tip_zh: "搭配詞 appreciable difference 是學術寫作極佳的詞彙組合。"
+            },
+            {
+                id: 7, type: "MC", category: "Confusing words & false friends 1", source_page: 9,
+                question_en: "The ________ noise from the new motorway has forced many people to move.",
+                question_zh: "新高速公路________（不斷持續）的噪音迫使許多人搬家。",
+                options: [
+                    { label: "A", text: "continual", kk: "[kənˋtɪnjʊəl]" },
+                    { label: "B", text: "continuous", kk: "[kənˋtɪnjʊəs]" },
+                    { label: "C", text: "continued", kk: "[kənˋtɪnjʊd]" },
+                    { label: "D", text: "continuing", kk: "[kənˋtɪnjʊɪŋ]" }
+                ],
+                answer: "B", answer_explanation_zh: "continuous 指「連續不斷、無中斷的」噪音；continual 則指「頻繁發生但有間斷的」。物理噪音持續無間斷用 continuous。",
+                key_vocabulary: [{
+                    word: "continuous", kk: "[kənˋtɪnjʊəs]", ipa: "/kənˈtɪnjuəs/", part_of_speech: "adj.", meaning_zh: "連續不斷的",
+                    phrase_examples: [
+                        { en: "It rained continuously all day.", zh: "雨連續下了一整天。" },
+                        { en: "The brain needs a continuous supply of blood.", zh: "大腦需要持續不斷的血液供應。" }
+                    ],
+                    collocations: ["continuous process", "continuous improvement"], synonyms: ["uninterrupted", "constant", "ceaseless"]
+                }],
+                ielts_tip_zh: "區分 continual (頻繁的) 與 continuous (不間斷的) 是高分關鍵。"
+            },
+            {
+                id: 8, type: "TF", category: "Confusing words & false friends 2", source_page: 11,
+                question_en: "As inflation spiralled out of control, paper money suddenly became almost priceless.",
+                question_zh: "隨著通貨膨脹失控，紙鈔突然變得幾乎「無價(priceless)」。(判斷用字是否符合邏輯)",
+                options: [
+                    { label: "True", text: "用法正確" },
+                    { label: "False", text: "用法錯誤" }
+                ],
+                answer: "False", answer_explanation_zh: "priceless 意為「極其珍貴的、無價的」；此處紙幣失去購買力，應使用 worthless (毫無價值的)。",
+                key_vocabulary: [{
+                    word: "worthless", kk: "[ˋwɝθlɪs]", ipa: "/ˈwɜːθləs/", part_of_speech: "adj.", meaning_zh: "毫無價值的",
+                    phrase_examples: [
+                        { en: "The company's shares are now virtually worthless.", zh: "該公司的股票現在幾乎一文不值。" },
+                        { en: "He gave me a piece of advice that was completely worthless.", zh: "他給了我一個毫無價值的建議。" }
+                    ],
+                    collocations: ["virtually worthless", "completely worthless"], synonyms: ["valueless", "useless"]
+                }],
+                ielts_tip_zh: "閱讀測驗常利用 priceless 與 worthless 的反差來設計陷阱題。"
+            },
+            {
+                id: 9, type: "FILL", category: "Context & meaning 1", source_page: 12,
+                question_en: "He was an extremely ________ author, writing three or four novels a year as well as many short stories.",
+                question_zh: "他是一位極其________的作家，一年寫三四本小說以及許多短篇故事。",
+                options: [
+                    { label: "prolific", text: "多產的" },
+                    { label: "elusive", text: "難以捉摸的" },
+                    { label: "exhaustive", text: "詳盡的" },
+                    { label: "resilient", text: "有彈性的" }
+                ],
+                answer: "prolific", answer_explanation_zh: "根據上下文「一年寫三四本小說」，推斷出該作家非常「多產的」(prolific)。",
+                key_vocabulary: [{
+                    word: "prolific", kk: "[prəˋlɪfɪk]", ipa: "/prəˈlɪfɪk/", part_of_speech: "adj.", meaning_zh: "多產的；作品豐富的",
+                    phrase_examples: [
+                        { en: "Picasso was a prolific artist.", zh: "畢卡索是一位多產的藝術家。" },
+                        { en: "Rabbits are prolific breeders.", zh: "兔子繁殖力極強。" }
+                    ],
+                    collocations: ["prolific writer", "prolific author"], synonyms: ["productive", "creative", "fertile"]
+                }],
+                ielts_tip_zh: "常用於描述作家、藝術家或科學家的成就，是極具學術感的讚美詞彙。"
+            },
+            {
+                id: 10, type: "MATCH", category: "Context & meaning 2", source_page: 14,
+                question_en: "Select the correct definition for the word: integrate",
+                question_zh: "請選擇單字「integrate」的正確定義：",
+                options: [
+                    { label: "A", text: "To help someone or something" },
+                    { label: "B", text: "To become a full member of a group or society" },
+                    { label: "C", text: "To risk damaging or destroying something" },
+                    { label: "D", text: "To spread ideas to a lot of people" }
+                ],
+                answer: "B", answer_explanation_zh: "integrate 的意思是「融入；整合」，在社會學背景下意指成為群體或社會的充分一員 (become a full member)。",
+                key_vocabulary: [{
+                    word: "integrate", kk: "[ˋɪntəˏgret]", ipa: "/ˈɪntɪɡreɪt/", part_of_speech: "v.", meaning_zh: "融入；整合",
+                    phrase_examples: [
+                        { en: "It can be very difficult for immigrants to integrate into local society.", zh: "移民要融入當地社會可能會非常困難。" },
+                        { en: "The new systems are easily integrated with existing ones.", zh: "新系統很容易與現有系統整合。" }
+                    ],
+                    collocations: ["integrate into", "integrate with"], synonyms: ["assimilate", "combine", "incorporate"]
+                }],
+                ielts_tip_zh: "探討移民、文化、科技系統整合時必用字彙。"
+            },
+            {
+                id: 11, type: "WORD_FORM", category: "Context & meaning 3", source_page: 16,
+                question_en: "The average ________ of an elephant is 60 - 70 years. (Combine 'life' + 'span')",
+                question_zh: "大象的平均壽命是 60 到 70 年。（請輸入正確單字）",
+                options: [], // Text input expected
+                answer: "lifespan", answer_explanation_zh: "life (生命) + span (跨度) 組合成 lifespan (壽命)。",
+                key_vocabulary: [{
+                    word: "lifespan", kk: "[ˋlaɪfˏspæn]", ipa: "/ˈlaɪfspæn/", part_of_speech: "n.", meaning_zh: "壽命；預期使用期限",
+                    phrase_examples: [
+                        { en: "A TV set has an average lifespan of 11 years.", zh: "電視機的平均使用壽命為11年。" },
+                        { en: "The project aims to increase the healthy lifespan of elderly people.", zh: "該計畫旨在延長老年人的健康壽命。" }
+                    ],
+                    collocations: ["average lifespan", "human lifespan"], synonyms: ["life expectancy", "lifetime"]
+                }],
+                ielts_tip_zh: "在描述動植物特徵或人類健康議題時，是極佳的主題字彙。"
+            },
+            {
+                id: 12, type: "MC", category: "Contrast and comparison", source_page: 18,
+                question_en: "Many people cannot ________ between lemon juice and lime juice.",
+                question_zh: "許多人無法________檸檬汁和萊姆汁（的區別）。",
+                options: [
+                    { label: "A", text: "differ", kk: "[ˋdɪfɚ]" },
+                    { label: "B", text: "differentiate", kk: "[ˏdɪfəˋrɛnʃɪˏet]" },
+                    { label: "C", text: "contrast", kk: "[ˋkɑntræst]" },
+                    { label: "D", text: "distinction", kk: "[dɪˋstɪŋkʃən]" }
+                ],
+                answer: "B", answer_explanation_zh: "differentiate 意指「區分」，常用搭配為 differentiate between A and B。",
+                key_vocabulary: [{
+                    word: "differentiate", kk: "[ˏdɪfəˋrɛnʃɪˏet]", ipa: "/ˌdɪfəˈrenʃieɪt/", part_of_speech: "v.", meaning_zh: "區分；辨別",
+                    phrase_examples: [
+                        { en: "It's important to differentiate between fact and opinion.", zh: "區分事實與觀點很重要。" },
+                        { en: "A child may not differentiate between his imagination and the real world.", zh: "孩子可能無法區分他的想像與真實世界。" }
+                    ],
+                    collocations: ["differentiate between", "differentiate A from B"], synonyms: ["distinguish", "discriminate"]
+                }],
+                ielts_tip_zh: "在撰寫比較類文章時，使用 differentiate between 展現準確用字能力。"
+            },
+            {
+                id: 13, type: "FILL", category: "Contrast and comparison", source_page: 18,
+                question_en: "My friends and I enjoy doing many of the same things. In that respect, we have a lot ________.",
+                question_zh: "我的朋友和我喜歡做許多相同的事情。在那個方面，我們有很多________（共通點）。",
+                options: [
+                    { label: "in similar", text: "錯誤用法" },
+                    { label: "in particular", text: "特別地" },
+                    { label: "in common", text: "共通點" },
+                    { label: "in contrast", text: "相比之下" }
+                ],
+                answer: "in common", answer_explanation_zh: "have something in common 是一個固定片語，意指「有共同之處」。",
+                key_vocabulary: [{
+                    word: "in common", kk: "[ɪn ˋkɑmən]", ipa: "/ɪn ˈkɒmən/", part_of_speech: "phr.", meaning_zh: "共通的；共有的",
+                    phrase_examples: [
+                        { en: "They have a lot in common.", zh: "他們有很多共同點。" },
+                        { en: "I found I had nothing in common with him.", zh: "我發現我和他毫無共同語言。" }
+                    ],
+                    collocations: ["have a lot in common", "have nothing in common"], synonyms: ["shared", "mutual"]
+                }],
+                ielts_tip_zh: "Speaking Part 1 或 2 描述朋友或家庭關係時非常實用的片語。"
+            },
+            {
+                id: 14, type: "MATCH", category: "Emphasis & misunderstanding", source_page: 19,
+                question_en: "Select the phrase that matches 'of crucial importance':",
+                question_zh: "請選擇與 'of crucial importance' 意義相同的詞組：",
+                options: [
+                    { label: "A", text: "somewhat relevant" },
+                    { label: "B", text: "widely misunderstood" },
+                    { label: "C", text: "crucially important" },
+                    { label: "D", text: "noticing easily" }
+                ],
+                answer: "C", answer_explanation_zh: "of crucial importance (名詞片語) 等同於 crucially important (副詞+形容詞)，皆表示「至關重要」。",
+                key_vocabulary: [{
+                    word: "crucially", kk: "[ˋkruʃəlɪ]", ipa: "/ˈkruːʃəli/", part_of_speech: "adv.", meaning_zh: "至關重要地",
+                    phrase_examples: [
+                        { en: "It is crucially important that we act immediately.", zh: "我們立即採取行動是至關重要的。" },
+                        { en: "The two species are crucially different.", zh: "這兩個物種有著關鍵性的差異。" }
+                    ],
+                    collocations: ["crucially important", "crucially depend on"], synonyms: ["critically", "vitally", "essentially"]
+                }],
+                ielts_tip_zh: "Writing 時使用 It is crucially important 代替 very important，能有效提升字彙分數。"
+            },
+            {
+                id: 15, type: "TF", category: "Emphasis & misunderstanding", source_page: 19,
+                question_en: "The phrase 'under the misapprehension' means having a correct and clear understanding of something.",
+                question_zh: "片語 'under the misapprehension' 的意思是對某事有正確且清晰的理解。（判斷對錯）",
+                options: [
+                    { label: "True", text: "正確" },
+                    { label: "False", text: "錯誤" }
+                ],
+                answer: "False", answer_explanation_zh: "misapprehension 字首 mis- 表示錯誤，意為「誤解」；因此該片語指「被誤導或抱持錯誤認知」。",
+                key_vocabulary: [{
+                    word: "misapprehension", kk: "[ˏmɪsæprɪˋhɛnʃən]", ipa: "/ˌmɪsæprɪˈhenʃn/", part_of_speech: "n.", meaning_zh: "誤解；誤會",
+                    phrase_examples: [
+                        { en: "He was under the misapprehension that socialism and communism were the same thing.", zh: "他誤以為社會主義和共產主義是一回事。" },
+                        { en: "I was under the misapprehension that the course was for beginners.", zh: "我誤以為這門課是為初學者開設的。" }
+                    ],
+                    collocations: ["under the misapprehension"], synonyms: ["misunderstanding", "delusion", "misconception"]
+                }],
+                ielts_tip_zh: "非常進階的詞彙，常用於澄清錯誤觀念的論述中。"
+            },
+            {
+                id: 16, type: "MC", category: "Focusing attention", source_page: 20,
+                question_en: "The college library is ________ for the use of students and staff.",
+                question_zh: "學院圖書館________供學生和教職員工使用。",
+                options: [
+                    { label: "A", text: "specifically", kk: "[spɪˋsɪfɪk!ɪ]" },
+                    { label: "B", text: "mostly", kk: "[ˋmostlɪ]" },
+                    { label: "C", text: "exclusively", kk: "[ɪkˋsklusɪvlɪ]" },
+                    { label: "D", text: "largely", kk: "[ˋlɑrdʒlɪ]" }
+                ],
+                answer: "C", answer_explanation_zh: "exclusively 意指「專門地；獨佔地」，強調「僅限於」某群體使用。",
+                key_vocabulary: [{
+                    word: "exclusively", kk: "[ɪkˋsklusɪvlɪ]", ipa: "/ɪkˈskluːsɪvli/", part_of_speech: "adv.", meaning_zh: "專門地；獨佔地",
+                    phrase_examples: [
+                        { en: "This room is exclusively for female guests.", zh: "此房間專供女性房客使用。" },
+                        { en: "The brand caters exclusively to the luxury market.", zh: "該品牌專注於奢侈品市場。" }
+                    ],
+                    collocations: ["exclusively for", "focus exclusively on"], synonyms: ["solely", "only", "entirely"]
+                }],
+                ielts_tip_zh: "在閱讀測驗中常出現，有時是 True/False/Not Given 考題判斷「絕對性」的關鍵字。"
+            },
+            {
+                id: 17, type: "FILL", category: "Generalisations & specifics", source_page: 21,
+                question_en: "Once you have an ________, you will discover that your work is easier to organise.",
+                question_zh: "一旦你有了________（大綱），你會發現你的工作更容易組織。",
+                options: [
+                    { label: "outline", text: "大綱" },
+                    { label: "detail", text: "細節" },
+                    { label: "peculiarity", text: "特點" },
+                    { label: "illustration", text: "圖解" }
+                ],
+                answer: "outline", answer_explanation_zh: "outline 指「大綱、概要」，撰寫文章前規劃的大框架。",
+                key_vocabulary: [{
+                    word: "outline", kk: "[ˋaʊtˏlaɪn]", ipa: "/ˈaʊtlaɪn/", part_of_speech: "n.", meaning_zh: "大綱；概要",
+                    phrase_examples: [
+                        { en: "She drew up an outline for the essay.", zh: "她草擬了這篇論文的大綱。" },
+                        { en: "The document gives a broad outline of the government's plans.", zh: "該文件給出了政府計劃的粗略大綱。" }
+                    ],
+                    collocations: ["draw up an outline", "broad outline"], synonyms: ["summary", "overview", "framework"]
+                }],
+                ielts_tip_zh: "不僅是字彙，也是準備 IELTS 寫作時非常重要的步驟 (Plan an outline)。"
+            },
+            {
+                id: 18, type: "MATCH", category: "Generalisations & specifics", source_page: 22,
+                question_en: "Select the correct definition for 'peculiarity':",
+                question_zh: "請選擇單字「peculiarity」的正確定義：",
+                options: [
+                    { label: "A", text: "A general statement" },
+                    { label: "B", text: "A minor technicality" },
+                    { label: "C", text: "An odd feature or detail that makes something different" },
+                    { label: "D", text: "An accurate illustration" }
+                ],
+                answer: "C", answer_explanation_zh: "peculiarity 意指「特性、怪癖、奇特之處」，指使事物與眾不同的獨特細節。",
+                key_vocabulary: [{
+                    word: "peculiarity", kk: "[pɪˏkjulɪˋærətɪ]", ipa: "/pɪˌkjuːliˈærəti/", part_of_speech: "n.", meaning_zh: "特性；怪癖；奇特之處",
+                    phrase_examples: [
+                        { en: "It is one of the peculiarities of the British system that judges wear wigs.", zh: "法官戴假髮是英國制度的奇特之處之一。" },
+                        { en: "We noticed the peculiarity of his behavior.", zh: "我們注意到了他行為的怪異之處。" }
+                    ],
+                    collocations: ["peculiarity of"], synonyms: ["characteristic", "oddity", "trait"]
+                }],
+                ielts_tip_zh: "形容文化差異或特定現象時的精準名詞。"
+            },
+            {
+                id: 19, type: "MC", category: "Groups", source_page: 23,
+                question_en: "During the rainy season, huge ________ of mosquitoes make life very uncomfortable for the local residents.",
+                question_zh: "在雨季，大群的蚊子（________）讓當地居民的生活非常不舒服。",
+                options: [
+                    { label: "A", text: "flocks", kk: "[flɑks]" },
+                    { label: "B", text: "herds", kk: "[hɝdz]" },
+                    { label: "C", text: "swarms", kk: "[swɔrmz]" },
+                    { label: "D", text: "shoals", kk: "[ʃolz]" }
+                ],
+                answer: "C", answer_explanation_zh: "英文集合名詞有固定搭配：昆蟲（如蜜蜂、蚊子）用 swarm；羊群鳥群用 flock；牛馬用 herd；魚群用 shoal/school。",
+                key_vocabulary: [{
+                    word: "swarm", kk: "[swɔrm]", ipa: "/swɔːm/", part_of_speech: "n.", meaning_zh: "（昆蟲的）一大群",
+                    phrase_examples: [
+                        { en: "A swarm of bees flew into the garden.", zh: "一大群蜜蜂飛進了花園。" },
+                        { en: "Swarms of journalists surrounded the building.", zh: "大批記者包圍了那棟建築。（引申指一大群人）" }
+                    ],
+                    collocations: ["a swarm of bees/locusts/mosquitoes"], synonyms: ["horde", "multitude"]
+                }],
+                ielts_tip_zh: "精準使用集合名詞可以向考官展現道地的英文語感。"
+            },
+            {
+                id: 20, type: "FILL", category: "Groups", source_page: 23,
+                question_en: "The bread oven can produce a ________ of 200 loaves every hour.",
+                question_zh: "這個烤麵包爐每小時可以生產一________（批）200 條麵包。",
+                options: [
+                    { label: "bunch", text: "串；束" },
+                    { label: "bundle", text: "捆" },
+                    { label: "batch", text: "一批" },
+                    { label: "pile", text: "堆" }
+                ],
+                answer: "batch", answer_explanation_zh: "batch 指「一次生產或處理的一批物品」，常用於烘焙、產品製造或文件處理。",
+                key_vocabulary: [{
+                    word: "batch", kk: "[bætʃ]", ipa: "/bætʃ/", part_of_speech: "n.", meaning_zh: "一批；一組",
+                    phrase_examples: [
+                        { en: "We're baking another batch of cookies.", zh: "我們正在烤另一批餅乾。" },
+                        { en: "The company has recalled a batch of faulty goods.", zh: "該公司召回了一批有瑕疵的產品。" }
+                    ],
+                    collocations: ["a batch of", "process in batches"], synonyms: ["lot", "group"]
+                }],
+                ielts_tip_zh: "在工廠運作或製程描述（Listening 流程圖 / Writing Task 1 流程圖）中常見的字彙。"
+            },
+            {
+                id: 21, type: "WORD_FORM", category: "How something works", source_page: 24,
+                question_en: "A ________ contains a strip or coil of steel and a strip or coil of copper, used to control temperature.",
+                question_zh: "________（恆溫器）包含鋼片/線圈與銅片/線圈，用於控制溫度。（提示：t_ _ _ _ _ _ _ _t）",
+                options: [],
+                answer: "thermostat", answer_explanation_zh: "thermo- (熱) + -stat (穩定器) = thermostat 恆溫器。",
+                key_vocabulary: [{
+                    word: "thermostat", kk: "[ˋθɝməˏstæt]", ipa: "/ˈθɜːmøstæt/", part_of_speech: "n.", meaning_zh: "恆溫器",
+                    phrase_examples: [
+                        { en: "You can set the thermostat to 20 degrees.", zh: "你可以將恆溫器設定為20度。" },
+                        { en: "A smart thermostat can help save energy.", zh: "智慧恆溫器有助於節省能源。" }
+                    ],
+                    collocations: ["set the thermostat", "adjust the thermostat"], synonyms: ["temperature controller"]
+                }],
+                ielts_tip_zh: "常出現於 Listening 關於房屋設備、能源節約或科技產品說明的考題中。"
+            },
+            {
+                id: 22, type: "MC", category: "Joining or becoming part...", source_page: 25,
+                question_en: "The International Book Association ________ with Universal Press in 2010 to form the International Press.",
+                question_zh: "國際圖書協會於 2010 年與環球出版社________（合併），成立了國際出版社。",
+                options: [
+                    { label: "A", text: "amalgamated", kk: "[əˋmælgəˏmetɪd]" },
+                    { label: "B", text: "incorporated", kk: "[ɪnˋkɔrpəˏretɪd]" },
+                    { label: "C", text: "integrated", kk: "[ˋɪntəˏgretɪd]" },
+                    { label: "D", text: "swallowed up", kk: "[ˋswɑlod ʌp]" }
+                ],
+                answer: "A", answer_explanation_zh: "amalgamate 意指組織、企業的「合併」，等同於 merge。",
+                key_vocabulary: [{
+                    word: "amalgamate", kk: "[əˋmælgəˏmet]", ipa: "/əˈmælɡəmeɪt/", part_of_speech: "v.", meaning_zh: "合併；聯合",
+                    phrase_examples: [
+                        { en: "The two companies amalgamated to form a new multinational corporation.", zh: "這兩家公司合併成立了一家新的跨國企業。" },
+                        { en: "The local unions amalgamated into one national union.", zh: "地方工會合併成一個全國性工會。" }
+                    ],
+                    collocations: ["amalgamate with", "amalgamate into"], synonyms: ["merge", "combine", "unite"]
+                }],
+                ielts_tip_zh: "高級商業/組織用語，在閱讀商業相關文章時必懂。"
+            },
+            {
+                id: 23, type: "TF", category: "Joining or becoming part...", source_page: 25,
+                question_en: "In business, if a large company 'swallows up' a smaller one, it means they formed an equal partnership.",
+                question_zh: "在商業界，如果大公司 'swallow up' 小公司，意味著他們建立了平等的夥伴關係。（判斷對錯）",
+                options: [
+                    { label: "True", text: "正確" },
+                    { label: "False", text: "錯誤" }
+                ],
+                answer: "False", answer_explanation_zh: "swallow up 字面是「吞噬」，在商業上指「併吞（收購）」，並非平等合作。",
+                key_vocabulary: [{
+                    word: "swallow up", kk: "[ˋswɑlo ʌp]", ipa: "/ˈswɒləʊ ʌp/", part_of_speech: "phr.v.", meaning_zh: "吞噬；併吞",
+                    phrase_examples: [
+                        { en: "A large international company swallowed up our firm last month.", zh: "一家大型國際公司上個月併吞了我們公司。" },
+                        { en: "Many small businesses have been swallowed up by large supermarkets.", zh: "許多小企業已經被大型超市吞噬了。" }
+                    ],
+                    collocations: ["be swallowed up by"], synonyms: ["take over", "absorb"]
+                }],
+                ielts_tip_zh: "這是非常生動的片語動詞，可用於批判大企業壟斷的論述中。"
+            },
+            {
+                id: 24, type: "MC", category: "Likes & dislikes", source_page: 26,
+                question_en: "I can never understand why people are so ________ by royal weddings.",
+                question_zh: "我永遠無法理解為什麼人們對皇家婚禮如此________（著迷）。",
+                options: [
+                    { label: "A", text: "repelled", kk: "[rɪˋpɛld]" },
+                    { label: "B", text: "detested", kk: "[dɪˋtɛstɪd]" },
+                    { label: "C", text: "captivated", kk: "[ˋkæptəˏvetɪd]" },
+                    { label: "D", text: "dreaded", kk: "[ˋdrɛdɪd]" }
+                ],
+                answer: "C", answer_explanation_zh: "captivated (被迷住的) 帶有正面的含義；repelled (使反感), detested (厭惡), dreaded (害怕) 均為負面詞。",
+                key_vocabulary: [{
+                    word: "captivate", kk: "[ˋkæptəˏvet]", ipa: "/ˈkæptɪveɪt/", part_of_speech: "v.", meaning_zh: "迷住；使著迷",
+                    phrase_examples: [
+                        { en: "The children were captivated by his stories.", zh: "孩子們被他的故事迷住了。" },
+                        { en: "Her singing captivated the audience.", zh: "她的歌聲讓觀眾聽得入迷。" }
+                    ],
+                    collocations: ["be captivated by"], synonyms: ["fascinate", "charm", "enthrall"]
+                }],
+                ielts_tip_zh: "比 interested in 強烈得多，用在 Speaking Part 2 描述喜歡的事物時能提昇語氣感染力。"
+            },
+            {
+                id: 25, type: "MATCH", category: "Likes & dislikes", source_page: 26,
+                question_en: "Select the correct definition for the word: loathe",
+                question_zh: "請選擇單字「loathe」的正確定義：",
+                options: [
+                    { label: "A", text: "To strongly dislike someone or something" },
+                    { label: "B", text: "To look forward to something" },
+                    { label: "C", text: "To tolerate an unpleasant situation" },
+                    { label: "D", text: "To be passionate about something" }
+                ],
+                answer: "A", answer_explanation_zh: "loathe 意指「極度討厭、厭惡」。",
+                key_vocabulary: [{
+                    word: "loathe", kk: "[loð]", ipa: "/ləʊð/", part_of_speech: "v.", meaning_zh: "極度討厭；厭惡",
+                    phrase_examples: [
+                        { en: "I absolutely loathe having to get out of bed early.", zh: "我絕對討厭必須早起。" },
+                        { en: "They loathe each other.", zh: "他們互相厭惡。" }
+                    ],
+                    collocations: ["absolutely loathe", "loathe doing something"], synonyms: ["detest", "hate", "despise"]
+                }],
+                ielts_tip_zh: "比 hate 更強烈、更進階，在 Speaking 中表達強烈反感時使用可加分。"
+            },
+            {
+                id: 26, type: "FILL", category: "Location & direction", source_page: 27,
+                question_en: "Based on common directions, if a building is across the intersection at an angle, it is ________.",
+                question_zh: "根據常見的方位描述，如果一棟建築在十字路口的斜對角，它是________。",
+                options: [
+                    { label: "directly opposite", text: "正對面" },
+                    { label: "halfway along", text: "在...的半路上" },
+                    { label: "diagonally opposite", text: "斜對面" },
+                    { label: "parallel to", text: "平行於" }
+                ],
+                answer: "diagonally opposite", answer_explanation_zh: "diagonally opposite 意指「斜對面」，是聽力地圖題常見方位詞。",
+                key_vocabulary: [{
+                    word: "diagonally", kk: "[daɪˋægən!ɪ]", ipa: "/daɪˈæɡənəli/", part_of_speech: "adv.", meaning_zh: "斜對角地",
+                    phrase_examples: [
+                        { en: "The library is diagonally opposite the police station.", zh: "圖書館在警察局的斜對面。" },
+                        { en: "He walked diagonally across the field.", zh: "他斜穿過田野。" }
+                    ],
+                    collocations: ["diagonally opposite", "walk diagonally"], synonyms: ["crosswise"]
+                }],
+                ielts_tip_zh: "IELTS Listening Section 2 地圖題必考高頻字彙，請務必熟悉其發音。"
+            },
+            {
+                id: 27, type: "WORD_FORM", category: "Modified words", source_page: 30,
+                question_en: "I was an _____achiever at school, always getting low grades in tests and poor marks in my homework.",
+                question_zh: "在學校我是一個表現不佳的學生（________achiever），考試總是拿低分，作業成績也很差。（請輸入完整單字）",
+                options: [],
+                answer: "underachiever", answer_explanation_zh: "under- (低於/不足) + achiever (成功者) = underachiever (表現不如預期/落後者)。",
+                key_vocabulary: [{
+                    word: "underachiever", kk: "[ˏʌndɚəˋtʃivɚ]", ipa: "/ˌʌndərəˈtʃiːvə/", part_of_speech: "n.", meaning_zh: "表現不佳的學生；成就未達預期者",
+                    phrase_examples: [
+                        { en: "The program aims to help boys who are underachievers at school.", zh: "該計畫旨在幫助在學校表現不佳的男孩。" },
+                        { en: "She was brilliant but a classic underachiever.", zh: "她很聰明，卻是個典型的成就未達預期者。" }
+                    ],
+                    collocations: ["a chronic underachiever", "underachiever at school"], synonyms: ["low achiever"]
+                }],
+                ielts_tip_zh: "探討教育、學校制度或個人職涯發展時的精準專有名詞。"
+            },
+            {
+                id: 28, type: "TF", category: "Modified words", source_page: 31,
+                question_en: "The word 'telecommunications' is formed by adding the prefix 'tele-' to 'communications'.",
+                question_zh: "單字 'telecommunications' (電信) 是由字首 'tele-' 加上 'communications' 組成的。（判斷對錯）",
+                options: [
+                    { label: "True", text: "正確" },
+                    { label: "False", text: "錯誤" }
+                ],
+                answer: "True", answer_explanation_zh: "tele- 是指「遠距離的」字首（如 television, telephone）。",
+                key_vocabulary: [{
+                    word: "telecommunications", kk: "[ˏtɛlɪkəˏmjunəˋkeʃənz]", ipa: "/ˌtelikəˌmjuːnɪˈkeɪʃnz/", part_of_speech: "n.", meaning_zh: "電信；長途通訊",
+                    phrase_examples: [
+                        { en: "The late twentieth century saw enormous advances in telecommunications.", zh: "二十世紀末見證了電信技術的巨大進步。" },
+                        { en: "He works in the telecommunications industry.", zh: "他在電信業工作。" }
+                    ],
+                    collocations: ["telecommunications industry", "telecommunications network"], synonyms: ["telecoms"]
+                }],
+                ielts_tip_zh: "科技與通訊類文章高頻字，掌握字根字首有助於猜測長單字含義。"
+            },
+            {
+                id: 29, type: "MC", category: "Objects & actions", source_page: 32,
+                question_en: "What happens to cooking fat or oil when it cools on an unwashed plate?",
+                question_zh: "烹調用油脂在未清洗的盤子上冷卻時會產生什麼現象？",
+                options: [
+                    { label: "A", text: "It evaporates", kk: "[ɪˋvæpəˏrets]" },
+                    { label: "B", text: "It congeals", kk: "[kənˋdʒilz]" },
+                    { label: "C", text: "It dissolves", kk: "[dɪˋzɑlvz]" },
+                    { label: "D", text: "It erodes", kk: "[ɪˋrodz]" }
+                ],
+                answer: "B", answer_explanation_zh: "congeal 指液體（如油脂、血液）冷卻或乾燥後「凝結、變稠」。",
+                key_vocabulary: [{
+                    word: "congeal", kk: "[kənˋdʒil]", ipa: "/kənˈdʒiːl/", part_of_speech: "v.", meaning_zh: "凝結；變稠",
+                    phrase_examples: [
+                        { en: "The grease in the pan had congealed.", zh: "平底鍋裡的油脂已經凝結了。" },
+                        { en: "The blood had congealed around the cut.", zh: "傷口周圍的血已經凝固了。" }
+                    ],
+                    collocations: ["blood congeals", "fat congeals"], synonyms: ["coagulate", "thicken", "solidify"]
+                }],
+                ielts_tip_zh: "常用於科普文章或描述化學/物理變化的閱讀測驗中。"
+            },
+            {
+                id: 30, type: "MATCH", category: "Objects & actions", source_page: 32,
+                question_en: "Match the definition 'Water slowly turning into vapour' with the correct verb:",
+                question_zh: "將定義「水慢慢變成蒸氣」與正確的動詞配對：",
+                options: [
+                    { label: "A", text: "condense" },
+                    { label: "B", text: "evaporate" },
+                    { label: "C", text: "melt" },
+                    { label: "D", text: "erode" }
+                ],
+                answer: "B", answer_explanation_zh: "evaporate 是蒸發；condense 是凝結；melt 是融化；erode 是侵蝕。",
+                key_vocabulary: [{
+                    word: "evaporate", kk: "[ɪˋvæpəˏret]", ipa: "/ɪˈvæpəreɪt/", part_of_speech: "v.", meaning_zh: "蒸發；揮發",
+                    phrase_examples: [
+                        { en: "The heat evaporated the water.", zh: "高溫使水蒸發了。" },
+                        { en: "His confidence evaporated as the interview continued.", zh: "隨著面試進行，他的信心逐漸消失（蒸發）了。" }
+                    ],
+                    collocations: ["water evaporates", "confidence evaporates"], synonyms: ["vaporize", "disappear"]
+                }],
+                ielts_tip_zh: "Task 1 流程圖 (如水循環系統或海水淡化廠) 描述時非常重要的動詞。"
+            },
+            {
+                id: 31, type: "MC", category: "Obligation & option", source_page: 34,
+                question_en: "The United Nations voted to impose ________ sanctions on the country, which had to be obeyed by everyone.",
+                question_zh: "聯合國投票決定對該國實施________（強制性的）制裁，每個人都必須遵守。",
+                options: [
+                    { label: "A", text: "optional", kk: "[ˋɑpʃən!]" },
+                    { label: "B", text: "voluntary", kk: "[ˋvɑlənˏtɛrɪ]" },
+                    { label: "C", text: "mandatory", kk: "[ˋmændəˏtorɪ]" },
+                    { label: "D", text: "exempt", kk: "[ɪgˋzɛmpt]" }
+                ],
+                answer: "C", answer_explanation_zh: "mandatory 意為「強制的、義務的」，對應句末的 had to be obeyed。",
+                key_vocabulary: [{
+                    word: "mandatory", kk: "[ˋmændəˏtorɪ]", ipa: "/ˈmændətəri/", part_of_speech: "adj.", meaning_zh: "強制的；必須的",
+                    phrase_examples: [
+                        { en: "The test includes a mandatory blood test.", zh: "該檢查包括一項強制的血液測試。" },
+                        { en: "It is mandatory to wear a seat belt in a car.", zh: "乘車時繫安全帶是強制的。" }
+                    ],
+                    collocations: ["mandatory for", "strictly mandatory"], synonyms: ["compulsory", "obligatory"]
+                }],
+                ielts_tip_zh: "探討法律、政府規定或學校制度時 (如必修課 compulsory/mandatory subjects) 極佳的用字。"
+            },
+            {
+                id: 32, type: "TF", category: "Obligation & option", source_page: 34,
+                question_en: "If you are 'exempt from' paying a tax, it means you are legally required to pay it.",
+                question_zh: "如果你 'exempt from' 繳稅，意味著你在法律上被要求繳納它。（判斷對錯）",
+                options: [
+                    { label: "True", text: "正確" },
+                    { label: "False", text: "錯誤" }
+                ],
+                answer: "False", answer_explanation_zh: "exempt from 意思是「免除...的；豁免的」，代表你**不需要**做某事。",
+                key_vocabulary: [{
+                    word: "exempt", kk: "[ɪgˋzɛmpt]", ipa: "/ɪɡˈzempt/", part_of_speech: "adj.", meaning_zh: "被免除的；獲豁免的",
+                    phrase_examples: [
+                        { en: "Students doing holiday jobs are exempt from paying income tax.", zh: "做寒暑期打工的學生免繳所得稅。" },
+                        { en: "Pregnant women are exempt from dental charges.", zh: "孕婦免收牙醫診療費。" }
+                    ],
+                    collocations: ["exempt from"], synonyms: ["free from", "excused"]
+                }],
+                ielts_tip_zh: "常出現於閱讀測驗中關於稅收、兵役或規定的文章細節中。"
+            },
+            {
+                id: 33, type: "FILL", category: "Opinion, attitude & belief", source_page: 35,
+                question_en: "Some people are extremely ________, especially regarding things like race or religion.",
+                question_zh: "有些人極度________（偏執/固執己見），尤其是在種族或宗教這類事情上。",
+                options: [
+                    { label: "pragmatic", text: "務實的" },
+                    { label: "traditional", text: "傳統的" },
+                    { label: "bigoted", text: "偏執的" },
+                    { label: "dedicated", text: "奉獻的" }
+                ],
+                answer: "bigoted", answer_explanation_zh: "bigoted 意為「偏執的、固執己見的」，常用來形容對種族或宗教有強烈偏見的人。",
+                key_vocabulary: [{
+                    word: "bigoted", kk: "[ˋbɪgətɪd]", ipa: "/ˈbɪɡətɪd/", part_of_speech: "adj.", meaning_zh: "偏執的；有偏見的",
+                    phrase_examples: [
+                        { en: "He is so bigoted that it's impossible to argue with him.", zh: "他太偏執了，根本無法和他爭論。" },
+                        { en: "She was shocked by his bigoted comments.", zh: "她被他充滿偏見的言論嚇到了。" }
+                    ],
+                    collocations: ["bigoted attitude", "bigoted views"], synonyms: ["prejudiced", "narrow-minded", "intolerant"]
+                }],
+                ielts_tip_zh: "在探討歧視、文化衝擊或社會問題的文章中是核心字彙。"
+            },
+            {
+                id: 34, type: "MATCH", category: "Opinion, attitude & belief", source_page: 36,
+                question_en: "Select the correct definition for 'pragmatic':",
+                question_zh: "請選擇單字「pragmatic」的正確定義：",
+                options: [
+                    { label: "A", text: "Focusing on practical results rather than theories" },
+                    { label: "B", text: "Being obsessive about secrecy" },
+                    { label: "C", text: "Having cynical views of life" },
+                    { label: "D", text: "Resisting any kind of change" }
+                ],
+                answer: "A", answer_explanation_zh: "pragmatic 意思是「務實的、實用主義的」，重實際成效而非理論。",
+                key_vocabulary: [{
+                    word: "pragmatic", kk: "[prægˋmætɪk]", ipa: "/præɡˈmætɪk/", part_of_speech: "adj.", meaning_zh: "務實的；實事求是的",
+                    phrase_examples: [
+                        { en: "I consider myself to be a pragmatic person.", zh: "我認為自己是個務實的人。" },
+                        { en: "We need to adopt a more pragmatic approach to the problem.", zh: "我們需要採取更務實的方法來解決問題。" }
+                    ],
+                    collocations: ["pragmatic approach", "pragmatic solution"], synonyms: ["practical", "realistic", "down-to-earth"]
+                }],
+                ielts_tip_zh: "寫作 Task 2 提出解決方案時，使用 pragmatic approach (務實的方法) 會讓論述更顯學術與專業。"
+            },
+            {
+                id: 35, type: "MC", category: "Opposites: adjectives", source_page: 37,
+                question_en: "Which word has the OPPOSITE meaning to 'beneficial' in the sentence: 'The changes he made were beneficial to the organisation'?",
+                question_zh: "在句子中，哪一個字與 'beneficial' (有益的) 的意思**相反**？",
+                options: [
+                    { label: "A", text: "sophisticated", kk: "[səˋfɪstɪˏketɪd]" },
+                    { label: "B", text: "detrimental", kk: "[ˏdɛtrəˋmɛnt!]" },
+                    { label: "C", text: "widespread", kk: "[ˋwaɪdˏsprɛd]" },
+                    { label: "D", text: "delicate", kk: "[ˋdɛləkət]" }
+                ],
+                answer: "B", answer_explanation_zh: "beneficial 是「有益的」，其反義詞為 detrimental (有害的)。",
+                key_vocabulary: [{
+                    word: "detrimental", kk: "[ˏdɛtrəˋmɛnt!]", ipa: "/ˌdetrɪˈmentl/", part_of_speech: "adj.", meaning_zh: "有害的；不利的",
+                    phrase_examples: [
+                        { en: "Smoking is highly detrimental to your health.", zh: "抽菸對你的健康極為有害。" },
+                        { en: "These chemicals have a detrimental effect on the environment.", zh: "這些化學物質對環境有不利影響。" }
+                    ],
+                    collocations: ["detrimental to", "detrimental effect"], synonyms: ["harmful", "damaging", "injurious"]
+                }],
+                ielts_tip_zh: "Task 2 討論科技、政策等缺點時，用 detrimental effect 代替 bad effect 瞬間提升單字分數！"
+            },
+            {
+                id: 36, type: "TF", category: "Opposites: verbs", source_page: 38,
+                question_en: "If you 'retain' a tradition, it means you abandon it.",
+                question_zh: "如果你「保留」(retain) 一項傳統，意味著你放棄 (abandon) 牠。（判斷對錯）",
+                options: [
+                    { label: "True", text: "正確" },
+                    { label: "False", text: "錯誤" }
+                ],
+                answer: "False", answer_explanation_zh: "retain 是保留，而 abandon 是拋棄，兩者互為反義詞。",
+                key_vocabulary: [{
+                    word: "abandon", kk: "[əˋbændən]", ipa: "/əˈbændən/", part_of_speech: "v.", meaning_zh: "拋棄；放棄",
+                    phrase_examples: [
+                        { en: "The project was abandoned due to lack of funding.", zh: "由於缺乏資金，該專案被放棄了。" },
+                        { en: "They were forced to abandon their home.", zh: "他們被迫放棄家園。" }
+                    ],
+                    collocations: ["abandon a project", "abandon hope"], synonyms: ["desert", "give up", "leave"]
+                }],
+                ielts_tip_zh: "寫作或口說中常被用來描述放棄某種習慣、計畫或地點。"
+            },
+            {
+                id: 37, type: "MC", category: "Ownership, giving, lending...", source_page: 39,
+                question_en: "When you buy a house, you usually need to take out a ________ from the bank.",
+                question_zh: "當你買房時，你通常需要向銀行申請________（房屋貸款）。",
+                options: [
+                    { label: "A", text: "mortgage", kk: "[ˋmɔrgɪdʒ]" },
+                    { label: "B", text: "pension", kk: "[ˋpɛnʃən]" },
+                    { label: "C", text: "dividend", kk: "[ˋdɪvəˏdɛnd]" },
+                    { label: "D", text: "subsidy", kk: "[ˋsʌbsədɪ]" }
+                ],
+                answer: "A", answer_explanation_zh: "mortgage 專指用來買房地產的抵押貸款；pension 是退休金，dividend 是股息，subsidy 是補助金。",
+                key_vocabulary: [{
+                    word: "mortgage", kk: "[ˋmɔrgɪdʒ]", ipa: "/ˈmɔːɡɪdʒ/", part_of_speech: "n.", meaning_zh: "房屋貸款；抵押貸款",
+                    phrase_examples: [
+                        { en: "They took out a £400,000 mortgage to buy the house.", zh: "他們辦了 40 萬英鎊的房貸來買這棟房子。" },
+                        { en: "He has been struggling to pay off his mortgage.", zh: "他一直努力在還清他的房貸。" }
+                    ],
+                    collocations: ["take out a mortgage", "pay off a mortgage"], synonyms: ["home loan"]
+                }],
+                ielts_tip_zh: "Listening Section 3 或 Reading 常見經濟與房地產字彙，注意 t 不發音。"
+            },
+            {
+                id: 38, type: "FILL", category: "Ownership, giving, lending...", source_page: 39,
+                question_en: "The ________ is responsible for paying the rent on time every month.",
+                question_zh: "________（承租人/房客）有責任每個月準時付房租。",
+                options: [
+                    { label: "landlord", text: "房東" },
+                    { label: "tenant", text: "房客" },
+                    { label: "owner", text: "所有人" },
+                    { label: "realtor", text: "房仲" }
+                ],
+                answer: "tenant", answer_explanation_zh: "tenant 意指「房客、承租人」，而 landlord 是房東。",
+                key_vocabulary: [{
+                    word: "tenant", kk: "[ˋtɛnənt]", ipa: "/ˈtenənt/", part_of_speech: "n.", meaning_zh: "房客；承租人",
+                    phrase_examples: [
+                        { en: "The tenant must give one month's notice before leaving.", zh: "房客在離開前必須提前一個月通知。" },
+                        { en: "They are looking for a reliable tenant for their apartment.", zh: "他們正在為公寓尋找可靠的房客。" }
+                    ],
+                    collocations: ["reliable tenant", "evict a tenant"], synonyms: ["renter", "leaseholder"]
+                }],
+                ielts_tip_zh: "在 Listening 租屋情境中（Section 1 常考題型）必背單字。"
+            },
+            {
+                id: 39, type: "MC", category: "Phrasal verbs 1", source_page: 40,
+                question_en: "She decided not to ________ the subject of money during the meeting.",
+                question_zh: "她決定在會議中不要________（提出/提及）金錢的話題。",
+                options: [
+                    { label: "A", text: "bring up", kk: "[brɪŋ ʌp]" },
+                    { label: "B", text: "take after", kk: "[tek ˋæftɚ]" },
+                    { label: "C", text: "look into", kk: "[lʊk ˋɪntu]" },
+                    { label: "D", text: "get over", kk: "[gɛt ˋovɚ]" }
+                ],
+                answer: "A", answer_explanation_zh: "bring up 在此指「提出、提及（某個話題）」；也可以指「撫養小孩」。",
+                key_vocabulary: [{
+                    word: "bring up", kk: "[brɪŋ ʌp]", ipa: "/brɪŋ ʌp/", part_of_speech: "phr.v.", meaning_zh: "提出（話題）；撫養",
+                    phrase_examples: [
+                        { en: "I didn't want to bring up the fact that she had lost her job.", zh: "我不想提及她失業的事實。" },
+                        { en: "He was brought up by his grandparents.", zh: "他是由祖父母撫養長大的。" }
+                    ],
+                    collocations: ["bring up a subject", "bring up a child"], synonyms: ["raise", "mention"]
+                }],
+                ielts_tip_zh: "片語動詞是 IELTS 聽力與口說測驗中的靈魂，讓語言聽起來更自然。"
+            },
+            {
+                id: 40, type: "MC", category: "Phrasal verbs 1", source_page: 40,
+                question_en: "Due to the bad weather, they had to ________ the outdoor event.",
+                question_zh: "因為天氣惡劣，他們不得不________（取消）戶外活動。",
+                options: [
+                    { label: "A", text: "put off", kk: "[pʊt ɔf]" },
+                    { label: "B", text: "call off", kk: "[kɔl ɔf]" },
+                    { label: "C", text: "give up", kk: "[gɪv ʌp]" },
+                    { label: "D", text: "hold on", kk: "[hold ɑn]" }
+                ],
+                answer: "B", answer_explanation_zh: "call off 意指「取消（活動）」；put off 則是「延期」。",
+                key_vocabulary: [{
+                    word: "call off", kk: "[kɔl ɔf]", ipa: "/kɔːl ɒf/", part_of_speech: "phr.v.", meaning_zh: "取消",
+                    phrase_examples: [
+                        { en: "The game was called off because of rain.", zh: "比賽因雨取消了。" },
+                        { en: "They have called off their engagement.", zh: "他們取消了婚約。" }
+                    ],
+                    collocations: ["call off an event", "call off a meeting"], synonyms: ["cancel"]
+                }],
+                ielts_tip_zh: "聽力測驗常利用 call off (取消) 與 put off (延期) 設下陷阱題。"
+            },
+            {
+                id: 41, type: "MC", category: "Phrasal verbs 1", source_page: 40,
+                question_en: "Many students ________ of university after their first year because they find it too difficult.",
+                question_zh: "許多學生在大學第一年後________（退學），因為他們覺得太難了。",
+                options: [
+                    { label: "A", text: "fall out", kk: "[fɔl aʊt]" },
+                    { label: "B", text: "drop out", kk: "[drɑp aʊt]" },
+                    { label: "C", text: "give in", kk: "[gɪv ɪn]" },
+                    { label: "D", text: "turn down", kk: "[tɝn daʊn]" }
+                ],
+                answer: "B", answer_explanation_zh: "drop out 意指「輟學、退學或退出」。",
+                key_vocabulary: [{
+                    word: "drop out", kk: "[drɑp aʊt]", ipa: "/drɒp aʊt/", part_of_speech: "phr.v.", meaning_zh: "退學；退出",
+                    phrase_examples: [
+                        { en: "He dropped out of school at 16.", zh: "他 16 歲就輟學了。" },
+                        { en: "The runner had to drop out of the race because of an injury.", zh: "那名跑者因傷不得不退出比賽。" }
+                    ],
+                    collocations: ["drop out of school", "drop out of a race"], synonyms: ["quit", "leave"]
+                }],
+                ielts_tip_zh: "在探討教育問題的口說 Part 3 或寫作中很實用。"
+            },
+            {
+                id: 42, type: "FILL", category: "Phrasal verbs 2", source_page: 41,
+                question_en: "Our plans to go to Paris ________ because we couldn't get a visa in time.",
+                question_zh: "我們去巴黎的計畫________（落空了），因為我們無法及時拿到簽證。",
+                options: [
+                    { label: "fell through", text: "落空" },
+                    { label: "fell back", text: "退縮" },
+                    { label: "fell out", text: "爭吵" },
+                    { label: "fell over", text: "摔倒" }
+                ],
+                answer: "fell through", answer_explanation_zh: "fall through 意指計畫、安排等「失敗、落空」。過去式為 fell through。",
+                key_vocabulary: [{
+                    word: "fall through", kk: "[fɔl θru]", ipa: "/fɔːl θruː/", part_of_speech: "phr.v.", meaning_zh: "（計畫等）落空；失敗",
+                    phrase_examples: [
+                        { en: "The sale of the house fell through at the last minute.", zh: "房子的買賣在最後一刻落空了。" },
+                        { en: "We found a buyer, but the deal fell through.", zh: "我們找到買家了，但交易泡湯了。" }
+                    ],
+                    collocations: ["plans fall through", "deal falls through"], synonyms: ["fail", "collapse"]
+                }],
+                ielts_tip_zh: "適合用於 Speaking Part 2 描述一次失敗或改變計畫的經歷。"
+            },
+            {
+                id: 43, type: "FILL", category: "Phrasal verbs 2", source_page: 41,
+                question_en: "Some people think we should ________ the monarchy because it is outdated.",
+                question_zh: "有些人認為我們應該________（廢除）君主制，因為它已經過時了。",
+                options: [
+                    { label: "do away with", text: "廢除；消除" },
+                    { label: "get away with", text: "僥倖逃脫" },
+                    { label: "look up to", text: "尊敬" },
+                    { label: "come down to", text: "歸結於" }
+                ],
+                answer: "do away with", answer_explanation_zh: "do away with 意指「廢除、消除」，等同於 abolish。",
+                key_vocabulary: [{
+                    word: "do away with", kk: "[du əˋwe wɪð]", ipa: "/duː əˈweɪ wɪð/", part_of_speech: "phr.v.", meaning_zh: "廢除；消除",
+                    phrase_examples: [
+                        { en: "They want to do away with the current tax system.", zh: "他們想要廢除現行的稅制。" },
+                        { en: "Computerization has enabled us to do away with a lot of paperwork.", zh: "電腦化讓我們免除了大量書面工作。" }
+                    ],
+                    collocations: ["do away with a system", "do away with a rule"], synonyms: ["abolish", "eliminate", "get rid of"]
+                }],
+                ielts_tip_zh: "在 Writing Task 2 中探討是否該取消某項舊制度時極具說服力的片語。"
+            },
+            {
+                id: 44, type: "FILL", category: "Phrasal verbs 2", source_page: 41,
+                question_en: "After 10 years of marriage, they decided to ________.",
+                question_zh: "結婚 10 年後，他們決定________（分手/離婚）。",
+                options: [
+                    { label: "make up", text: "和好" },
+                    { label: "break out", text: "爆發" },
+                    { label: "split up", text: "分手；分開" },
+                    { label: "settle down", text: "定居" }
+                ],
+                answer: "split up", answer_explanation_zh: "split up 意指「關係破裂、分手」，常用於婚姻或伴侶關係。",
+                key_vocabulary: [{
+                    word: "split up", kk: "[splɪt ʌp]", ipa: "/splɪt ʌp/", part_of_speech: "phr.v.", meaning_zh: "分手；分開",
+                    phrase_examples: [
+                        { en: "She split up with her boyfriend last week.", zh: "她上週和男友分手了。" },
+                        { en: "The band split up after their third album.", zh: "該樂團在第三張專輯後解散了。" }
+                    ],
+                    collocations: ["split up with someone"], synonyms: ["separate", "break up"]
+                }],
+                ielts_tip_zh: "口語化的用法，適合 Speaking 測驗講述人物關係。"
+            },
+            {
+                id: 45, type: "MC", category: "Phrasal verbs 3", source_page: 43,
+                question_en: "I am really ________ hearing from you soon.",
+                question_zh: "我真的很________（期待）盡快收到你的回信。",
+                options: [
+                    { label: "A", text: "looking up to", kk: "[ˋlʊkɪŋ ʌp tu]" },
+                    { label: "B", text: "looking down on", kk: "[ˋlʊkɪŋ daʊn ɑn]" },
+                    { label: "C", text: "looking forward to", kk: "[ˋlʊkɪŋ ˋfɔrwɚd tu]" },
+                    { label: "D", text: "looking out for", kk: "[ˋlʊkɪŋ aʊt fɔr]" }
+                ],
+                answer: "C", answer_explanation_zh: "look forward to 意指「期待」，請注意後方須接名詞或 V-ing (此題接 hearing)。",
+                key_vocabulary: [{
+                    word: "look forward to", kk: "[lʊk ˋfɔrwɚd tu]", ipa: "/lʊk ˈfɔːwəd tuː/", part_of_speech: "phr.v.", meaning_zh: "期待；盼望",
+                    phrase_examples: [
+                        { en: "I'm looking forward to my holiday.", zh: "我正期待著我的假期。" },
+                        { en: "We look forward to welcoming you to the hotel.", zh: "我們期待歡迎您光臨本飯店。" }
+                    ],
+                    collocations: ["look forward to seeing", "look forward to the weekend"], synonyms: ["anticipate"]
+                }],
+                ielts_tip_zh: "General Training 模組寫信 (Task 1) 結尾段的必備句型。"
+            },
+            {
+                id: 46, type: "MC", category: "Phrasal verbs 3", source_page: 43,
+                question_en: "My French is not perfect, but I know enough to ________ when I visit Paris.",
+                question_zh: "我的法文不完美，但我懂的足夠讓我在造訪巴黎時________（勉強應付/過得去）。",
+                options: [
+                    { label: "A", text: "get off", kk: "[gɛt ɔf]" },
+                    { label: "B", text: "get by", kk: "[gɛt baɪ]" },
+                    { label: "C", text: "get across", kk: "[gɛt əˋkrɔs]" },
+                    { label: "D", text: "get over", kk: "[gɛt ˋovɚ]" }
+                ],
+                answer: "B", answer_explanation_zh: "get by 意指「勉強過活、勉強應付」，在此形容外語能力足夠基本溝通。",
+                key_vocabulary: [{
+                    word: "get by", kk: "[gɛt baɪ]", ipa: "/ɡet baɪ/", part_of_speech: "phr.v.", meaning_zh: "勉強過活；勉強應付",
+                    phrase_examples: [
+                        { en: "How does she get by on such a small salary?", zh: "她靠這麼點薪水怎麼過活？" },
+                        { en: "I don't have much money, but I'll get by.", zh: "我錢不多，但還過得去。" }
+                    ],
+                    collocations: ["get by on a salary", "manage to get by"], synonyms: ["survive", "manage"]
+                }],
+                ielts_tip_zh: "Speaking 測驗被問到外語能力或經濟狀況時的道地用語。"
+            },
+            {
+                id: 47, type: "MC", category: "Phrasal verbs 3", source_page: 43,
+                question_en: "It is wrong to ________ people simply because they have less money than you.",
+                question_zh: "僅僅因為別人錢比你少就________（看不起）他們是不對的。",
+                options: [
+                    { label: "A", text: "look out for", kk: "[lʊk aʊt fɔr]" },
+                    { label: "B", text: "look up to", kk: "[lʊk ʌp tu]" },
+                    { label: "C", text: "look after", kk: "[lʊk ˋæftɚ]" },
+                    { label: "D", text: "look down on", kk: "[lʊk daʊn ɑn]" }
+                ],
+                answer: "D", answer_explanation_zh: "look down on 意指「看不起、輕視」，其反義詞為 look up to (尊敬)。",
+                key_vocabulary: [{
+                    word: "look down on", kk: "[lʊk daʊn ɑn]", ipa: "/lʊk daʊn ɒn/", part_of_speech: "phr.v.", meaning_zh: "看不起；輕視",
+                    phrase_examples: [
+                        { en: "She thinks they look down on her because she doesn't have a degree.", zh: "她認為他們因為她沒有學位而看不起她。" },
+                        { en: "He tends to look down on anyone who isn't successful.", zh: "他往往看不起任何不成功的人。" }
+                    ],
+                    collocations: ["look down on someone"], synonyms: ["despise", "scorn"]
+                }],
+                ielts_tip_zh: "探討社會階層、貧富差距或歧視問題時非常貼切的片語。"
+            },
+            {
+                id: 48, type: "MATCH", category: "Phrasal verbs 4", source_page: 44,
+                question_en: "Select the correct definition for the phrasal verb: 'put up with'",
+                question_zh: "請選擇片語動詞「put up with」的正確定義：",
+                options: [
+                    { label: "A", text: "To tolerate an unpleasant situation or person" },
+                    { label: "B", text: "To cancel an event" },
+                    { label: "C", text: "To suggest an idea" },
+                    { label: "D", text: "To postpone something" }
+                ],
+                answer: "A", answer_explanation_zh: "put up with 意指「忍受、容忍」，等同於 tolerate。",
+                key_vocabulary: [{
+                    word: "put up with", kk: "[pʊt ʌp wɪð]", ipa: "/pʊt ʌp wɪð/", part_of_speech: "phr.v.", meaning_zh: "忍受；容忍",
+                    phrase_examples: [
+                        { en: "I can't put up with the noise any longer.", zh: "我再也無法忍受這噪音了。" },
+                        { en: "She puts up with his bad temper because she loves him.", zh: "她容忍他的壞脾氣因為她愛他。" }
+                    ],
+                    collocations: ["put up with noise", "put up with behavior"], synonyms: ["tolerate", "endure", "bear"]
+                }],
+                ielts_tip_zh: "口說非常實用，能展現你掌握道地英文慣用語的能力。"
+            },
+            {
+                id: 49, type: "MATCH", category: "Phrasal verbs 4", source_page: 45,
+                question_en: "Select the correct definition for the phrasal verb: 'set off'",
+                question_zh: "請選擇片語動詞「set off」的正確定義：",
+                options: [
+                    { label: "A", text: "To finish a task" },
+                    { label: "B", text: "To start a journey" },
+                    { label: "C", text: "To organize a meeting" },
+                    { label: "D", text: "To reject an offer" }
+                ],
+                answer: "B", answer_explanation_zh: "set off 主要意思是「出發、啟程（開始旅程）」。",
+                key_vocabulary: [{
+                    word: "set off", kk: "[sɛt ɔf]", ipa: "/set ɒf/", part_of_speech: "phr.v.", meaning_zh: "出發；啟程",
+                    phrase_examples: [
+                        { en: "We set off early the next morning.", zh: "我們隔天一早出發。" },
+                        { en: "They set off for Paris.", zh: "他們啟程前往巴黎。" }
+                    ],
+                    collocations: ["set off on a journey", "set off early"], synonyms: ["depart", "leave", "start out"]
+                }],
+                ielts_tip_zh: "Speaking Part 2 描述一次旅行或難忘的旅程時，用 set off 替代 start 更好。"
+            },
+            {
+                id: 50, type: "MATCH", category: "Phrasal verbs 4", source_page: 45,
+                question_en: "Select the correct definition for the phrasal verb: 'stand in'",
+                question_zh: "請選擇片語動詞「stand in」的正確定義：",
+                options: [
+                    { label: "A", text: "To completely understand something" },
+                    { label: "B", text: "To do someone's job for them while they are away" },
+                    { label: "C", text: "To wait in a line" },
+                    { label: "D", text: "To refuse to change your opinion" }
+                ],
+                answer: "B", answer_explanation_zh: "stand in (for someone) 意思是「代替、頂替（某人的職位或工作）」。",
+                key_vocabulary: [{
+                    word: "stand in", kk: "[stænd ɪn]", ipa: "/stænd ɪn/", part_of_speech: "phr.v.", meaning_zh: "代替；頂替",
+                    phrase_examples: [
+                        { en: "I'm standing in for the manager while she's on holiday.", zh: "經理休假期間我暫代她的職務。" },
+                        { en: "Could you stand in for me at the meeting?", zh: "你能不能在會議上代替我？" }
+                    ],
+                    collocations: ["stand in for someone"], synonyms: ["substitute", "deputize"]
+                }],
+                ielts_tip_zh: "工作職場情境（Listening Section 1或3）常聽到的實用片語。"
+            },
+            {
+                id: 51, type: "MC", category: "Presenting an argument", source_page: 46,
+                question_en: "The weather was terrible. ________, we decided to go for a walk.",
+                question_zh: "天氣糟透了。________（儘管如此），我們還是決定去散步。",
+                options: [
+                    { label: "A", text: "Consequently", kk: "[ˋkɑnsəˏkwɛntlɪ]" },
+                    { label: "B", text: "Furthermore", kk: "[ˋfɝðɚˏmor]" },
+                    { label: "C", text: "Nevertheless", kk: "[ˏnɛvɚðəˋlɛs]" },
+                    { label: "D", text: "Similarly", kk: "[ˋsɪməlɚlɪ]" }
+                ],
+                answer: "C", answer_explanation_zh: "nevertheless 表示讓步與轉折，意為「然而、儘管如此」。",
+                key_vocabulary: [{
+                    word: "nevertheless", kk: "[ˏnɛvɚðəˋlɛs]", ipa: "/ˌnevəðəˈles/", part_of_speech: "adv.", meaning_zh: "然而；儘管如此",
+                    phrase_examples: [
+                        { en: "The building is guarded around the clock, but robberies occur nevertheless.", zh: "這棟建築全天候有警衛，但儘管如此，搶劫還是會發生。" },
+                        { en: "What you said was true. It was, nevertheless, a little unkind.", zh: "你說的是事實。但儘管如此，還是有點不友善。" }
+                    ],
+                    collocations: ["but nevertheless"], synonyms: ["however", "nonetheless", "yet"]
+                }],
+                ielts_tip_zh: "Writing Task 2 建立論述轉折的強大連接詞，比 but 更為正式學術。"
+            },
+            {
+                id: 52, type: "TF", category: "Reason & result", source_page: 47,
+                question_en: "If a riot ensues, it means it happens as a result of something else.",
+                question_zh: "如果一場暴動 'ensues'，意味著它是作為某事的結果而發生的。（判斷對錯）",
+                options: [
+                    { label: "True", text: "正確" },
+                    { label: "False", text: "錯誤" }
+                ],
+                answer: "True", answer_explanation_zh: "ensue 是動詞，意為「接著發生、因...而產生」，常用於描述後果。",
+                key_vocabulary: [{
+                    word: "ensue", kk: "[ɪnˋsu]", ipa: "/ɪnˈsjuː/", part_of_speech: "v.", meaning_zh: "接著發生；因而產生",
+                    phrase_examples: [
+                        { en: "An argument ensued.", zh: "隨後發生了爭吵。" },
+                        { en: "Panic ensued when the fire alarm went off.", zh: "火災警報響起時，隨之而來的是一陣恐慌。" }
+                    ],
+                    collocations: ["problems ensue", "chaos ensues"], synonyms: ["follow", "result", "arise"]
+                }],
+                ielts_tip_zh: "撰寫因果關係論述時（Cause and Effect essay）的極佳字彙。"
+            },
+            {
+                id: 53, type: "FILL", category: "Reason & result", source_page: 47,
+                question_en: "The recent surge in crime ________ the government to take immediate action.",
+                question_zh: "最近犯罪率的激增________（促使）政府採取立即的行動。",
+                options: [
+                    { label: "halted", text: "停止" },
+                    { label: "prompted", text: "促使" },
+                    { label: "delayed", text: "延遲" },
+                    { label: "prevented", text: "預防" }
+                ],
+                answer: "prompted", answer_explanation_zh: "prompt 當動詞時，意指「引起、導致、促使（某人採取行動）」。",
+                key_vocabulary: [{
+                    word: "prompt", kk: "[prɑmpt]", ipa: "/prɒmpt/", part_of_speech: "v.", meaning_zh: "促使；引起",
+                    phrase_examples: [
+                        { en: "The discovery of the bomb prompted an increase in security.", zh: "炸彈的發現促使安全防護升級。" },
+                        { en: "What prompted you to say that?", zh: "是什麼促使你說出那種話？" }
+                    ],
+                    collocations: ["prompt someone to do something"], synonyms: ["cause", "trigger", "provoke"]
+                }],
+                ielts_tip_zh: "討論社會問題與政府解決方案的必考字彙。"
+            },
+            {
+                id: 54, type: "MC", category: "Shape & features", source_page: 48,
+                question_en: "A tube is a ________ object.",
+                question_zh: "管子是一個________（圓柱形的）物體。",
+                options: [
+                    { label: "A", text: "spherical", kk: "[ˋsfɪrɪk!]" },
+                    { label: "B", text: "rectangular", kk: "[rɛkˋtæŋgjəlɚ]" },
+                    { label: "C", text: "cylindrical", kk: "[sɪˋlɪndrɪk!]" },
+                    { label: "D", text: "triangular", kk: "[traɪˋæŋgjəlɚ]" }
+                ],
+                answer: "C", answer_explanation_zh: "cylindrical 指「圓柱形的」；spherical 是球形的，rectangular 是長方形的。",
+                key_vocabulary: [{
+                    word: "cylindrical", kk: "[sɪˋlɪndrɪk!]", ipa: "/səˈlɪndrɪkl/", part_of_speech: "adj.", meaning_zh: "圓柱形的",
+                    phrase_examples: [
+                        { en: "The package was in a long, cylindrical container.", zh: "包裹裝在一個長圓柱形的容器裡。" },
+                        { en: "They found a strange cylindrical object.", zh: "他們發現了一個奇怪的圓柱狀物體。" }
+                    ],
+                    collocations: ["cylindrical shape", "cylindrical container"], synonyms: ["tube-shaped"]
+                }],
+                ielts_tip_zh: "在 Listening 或 Reading 中描述物品外觀、機械構造時常出現的形狀字彙。"
+            },
+            {
+                id: 55, type: "MC", category: "Size, quantity & dimension", source_page: 49,
+                question_en: "The chance of winning the lottery is completely ________.",
+                question_zh: "中樂透的機率是完全________（微乎其微的）。",
+                options: [
+                    { label: "A", text: "colossal", kk: "[kəˋlɑs!]" },
+                    { label: "B", text: "mammoth", kk: "[ˋmæməθ]" },
+                    { label: "C", text: "minuscule", kk: "[ˋmɪnəsˏkjul]" },
+                    { label: "D", text: "substantial", kk: "[səbˋstænʃəl]" }
+                ],
+                answer: "C", answer_explanation_zh: "minuscule 意指「極小的、微乎其微的」，其餘選項皆代表巨大或可觀的。",
+                key_vocabulary: [{
+                    word: "minuscule", kk: "[ˋmɪnəsˏkjul]", ipa: "/ˈmɪnəskjuːl/", part_of_speech: "adj.", meaning_zh: "極小的；微乎其微的",
+                    phrase_examples: [
+                        { en: "All she gave him to eat was two minuscule pieces of toast.", zh: "她給他吃的只有兩小片微不足道的吐司。" },
+                        { en: "The risk of infection is minuscule.", zh: "感染的風險微乎其微。" }
+                    ],
+                    collocations: ["minuscule amount", "minuscule fraction"], synonyms: ["tiny", "minute", "microscopic"]
+                }],
+                ielts_tip_zh: "Task 1 描述圖表數據中佔極小比例時（如 1%）的高級替代詞。"
+            },
+            {
+                id: 56, type: "WORD_FORM", category: "Size, quantity & dimension", source_page: 50,
+                question_en: "Cleaning the entire house after the party was a ________ task. (Hint: extremely large, starts with m)",
+                question_zh: "派對後打掃整棟房子是一項________（龐大艱鉅的）任務。（提示：m_ _ _ _ _h）",
+                options: [],
+                answer: "mammoth", answer_explanation_zh: "mammoth 原指長毛象，作為形容詞指「巨大的、龐大的」。",
+                key_vocabulary: [{
+                    word: "mammoth", kk: "[ˋmæməθ]", ipa: "/ˈmæməθ/", part_of_speech: "adj.", meaning_zh: "巨大的；龐大的",
+                    phrase_examples: [
+                        { en: "It's a mammoth undertaking.", zh: "這是一項龐大的工程。" },
+                        { en: "Cleaning up the city-wide mess is going to be a mammoth task.", zh: "清理全城的混亂將是一項艱鉅的任務。" }
+                    ],
+                    collocations: ["mammoth task", "mammoth project"], synonyms: ["huge", "gigantic", "massive"]
+                }],
+                ielts_tip_zh: "形容挑戰或工作量極大時非常生動的形容詞。"
+            },
+            {
+                id: 57, type: "TF", category: "Spelling", source_page: 51,
+                question_en: "A 'conscientious' student is one who ignores their studies and behaves carelessly.",
+                question_zh: "一個「conscientious」的學生是指忽略學業且行為粗心的人。（判斷對錯）",
+                options: [
+                    { label: "True", text: "正確" },
+                    { label: "False", text: "錯誤" }
+                ],
+                answer: "False", answer_explanation_zh: "conscientious 意指「認真負責的、勤奮的」，形容學生或工作者態度嚴謹。",
+                key_vocabulary: [{
+                    word: "conscientious", kk: "[ˏkɑnʃɪˋɛnʃəs]", ipa: "/ˌkɒnʃiˈenʃəs/", part_of_speech: "adj.", meaning_zh: "認真盡責的；勤勉的",
+                    phrase_examples: [
+                        { en: "He is a conscientious worker who always does his best.", zh: "他是一名認真盡責的員工，總是盡力而為。" },
+                        { en: "A conscientious teacher may feel guilty if students fail.", zh: "如果有學生不及格，盡責的老師可能會感到內疚。" }
+                    ],
+                    collocations: ["conscientious worker", "conscientious effort"], synonyms: ["diligent", "meticulous", "dedicated"]
+                }],
+                ielts_tip_zh: "注意拼字！這字包含了 science 在中間，是描述性格的高分字彙。"
+            },
+            {
+                id: 58, type: "MC", category: "Stopping something", source_page: 52,
+                question_en: "I tried to ________ him from leaving his job, but he wouldn't listen.",
+                question_zh: "我試圖________（勸阻）他辭職，但他不聽。",
+                options: [
+                    { label: "A", text: "persuade", kk: "[pɚˋswed]" },
+                    { label: "B", text: "encourage", kk: "[ɪnˋkɝɪdʒ]" },
+                    { label: "C", text: "dissuade", kk: "[dɪˋswed]" },
+                    { label: "D", text: "promote", kk: "[prəˋmot]" }
+                ],
+                answer: "C", answer_explanation_zh: "dissuade 意思是「勸阻」，與 persuade（說服）相反。搭配介係詞為 from。",
+                key_vocabulary: [{
+                    word: "dissuade", kk: "[dɪˋswed]", ipa: "/dɪˈsweɪd/", part_of_speech: "v.", meaning_zh: "勸阻",
+                    phrase_examples: [
+                        { en: "I tried to dissuade her from leaving.", zh: "我試圖勸阻她離開。" },
+                        { en: "They managed to dissuade him from making a formal complaint.", zh: "他們設法勸阻他提出正式投訴。" }
+                    ],
+                    collocations: ["dissuade someone from doing something"], synonyms: ["discourage", "deter"]
+                }],
+                ielts_tip_zh: "非常進階的動詞，展現精準的語意控制力。"
+            },
+            {
+                id: 59, type: "MATCH", category: "Success & failure", source_page: 53,
+                question_en: "Select the correct definition for the word: 'falter'",
+                question_zh: "請選擇單字「falter」的正確定義：",
+                options: [
+                    { label: "A", text: "To succeed easily" },
+                    { label: "B", text: "To lose strength, momentum, or confidence" },
+                    { label: "C", text: "To overcome an obstacle" },
+                    { label: "D", text: "To start something new" }
+                ],
+                answer: "B", answer_explanation_zh: "falter 意指「衰退、動搖、蹣跚」，表示失去力量或信心而開始失敗。",
+                key_vocabulary: [{
+                    word: "falter", kk: "[ˋfɔltɚ]", ipa: "/ˈfɔːltə/", part_of_speech: "v.", meaning_zh: "衰弱；動搖；蹣跚",
+                    phrase_examples: [
+                        { en: "The economy is beginning to falter.", zh: "經濟開始衰退。" },
+                        { en: "Her courage did not falter.", zh: "她的勇氣並未動搖。" }
+                    ],
+                    collocations: ["economy falters", "voice falters"], synonyms: ["hesitate", "waver", "stumble"]
+                }],
+                ielts_tip_zh: "寫作論述經濟、政策或個人努力遇到瓶頸時的高階動詞。"
+            },
+            {
+                id: 60, type: "MC", category: "Task commands", source_page: 54,
+                question_en: "In your essay, you must ________ your opinions with evidence.",
+                question_zh: "在你的論文中，你必須用證據來________（證明...有理 / 支持）你的觀點。",
+                options: [
+                    { label: "A", text: "summarise", kk: "[ˋsʌməˏraɪz]" },
+                    { label: "B", text: "evaluate", kk: "[ɪˋvæljʊˏet]" },
+                    { label: "C", text: "justify", kk: "[ˋdʒʌstəˏfaɪ]" },
+                    { label: "D", text: "outline", kk: "[ˋaʊtˏlaɪn]" }
+                ],
+                answer: "C", answer_explanation_zh: "justify 意為「證明...是正當的/有理的」，在學術寫作中即提出理由和證據支持觀點。",
+                key_vocabulary: [{
+                    word: "justify", kk: "[ˋdʒʌstəˏfaɪ]", ipa: "/ˈdʒʌstɪfaɪ/", part_of_speech: "v.", meaning_zh: "證明...有理；為...辯護",
+                    phrase_examples: [
+                        { en: "How can you justify spending so much money?", zh: "你怎麼能為花這麼多錢辯解呢？" },
+                        { en: "He tried to justify his actions.", zh: "他試圖為自己的行為辯護。" }
+                    ],
+                    collocations: ["justify an action", "justify an opinion"], synonyms: ["defend", "validate", "explain"]
+                }],
+                ielts_tip_zh: "IELTS Task 2 題目本身常出現的指令詞 (Give reasons to justify your answer)。"
+            },
+            {
+                id: 61, type: "MC", category: "Architecture", source_page: 59,
+                question_en: "The old factory has been empty for years and is now completely ________.",
+                question_zh: "那間舊工廠已經空置多年，現在已經完全________（荒廢的）。",
+                options: [
+                    { label: "A", text: "modernised", kk: "[ˋmɑdɚnaɪzd]" },
+                    { label: "B", text: "derelict", kk: "[ˋdɛrəˏlɪkt]" },
+                    { label: "C", text: "residential", kk: "[ˏrɛzəˋdɛnʃəl]" },
+                    { label: "D", text: "furnished", kk: "[ˋfɝnɪʃt]" }
+                ],
+                answer: "B", answer_explanation_zh: "derelict 專指建築物或土地「廢棄的、年久失修的」。",
+                key_vocabulary: [{
+                    word: "derelict", kk: "[ˋdɛrəˏlɪkt]", ipa: "/ˈderəlɪkt/", part_of_speech: "adj.", meaning_zh: "荒廢的；被棄置的",
+                    phrase_examples: [
+                        { en: "The land lay derelict for ten years.", zh: "這片土地荒廢了十年。" },
+                        { en: "They plan to turn the derelict building into apartments.", zh: "他們計畫把這棟廢棄建築改建成公寓。" }
+                    ],
+                    collocations: ["derelict building", "derelict land"], synonyms: ["abandoned", "ruined", "dilapidated"]
+                }],
+                ielts_tip_zh: "探討都市更新 (Urban renewal) 或鄉村人口外流議題的專題字彙。"
+            },
+            {
+                id: 62, type: "FILL", category: "Architecture", source_page: 60,
+                question_en: "The building has a beautiful classical ________, but the interior is very modern.",
+                question_zh: "這棟建築有著美麗的古典________（正面／外觀），但內部非常現代化。",
+                options: [
+                    { label: "façade", text: "正面；外觀" },
+                    { label: "foundation", text: "地基" },
+                    { label: "corridor", text: "走廊" },
+                    { label: "staircase", text: "樓梯" }
+                ],
+                answer: "façade", answer_explanation_zh: "façade (facade) 專指建築物的主要正面或外觀，常用於描述建築特色。",
+                key_vocabulary: [{
+                    word: "façade", kk: "[fəˋsɑd]", ipa: "/fəˈsɑːd/", part_of_speech: "n.", meaning_zh: "（建築物的）正面；虛假外表",
+                    phrase_examples: [
+                        { en: "The gallery has a beautiful 18th-century façade.", zh: "畫廊有著美麗的 18 世紀建築正面。" },
+                        { en: "They hid their dislike behind a friendly façade.", zh: "他們把厭惡隱藏在友好的外表下。" }
+                    ],
+                    collocations: ["classical façade", "behind a façade"], synonyms: ["front", "exterior"]
+                }],
+                ielts_tip_zh: "在 Listening 的導覽主題，或 Reading 描述古建築文章中經常出現。"
+            },
+            {
+                id: 63, type: "MC", category: "The arts", source_page: 61,
+                question_en: "Art that does not attempt to represent external reality, but seeks to achieve its effect using shapes, forms, and colors is known as ________.",
+                question_zh: "不試圖呈現外部現實，而是透過形狀、形式和顏色來達到效果的藝術被稱為________（抽象藝術）。",
+                options: [
+                    { label: "A", text: "landscape", kk: "[ˋlændˏskep]" },
+                    { label: "B", text: "portrait", kk: "[ˋportrɪt]" },
+                    { label: "C", text: "abstract art", kk: "[ˋæbstrækt ɑrt]" },
+                    { label: "D", text: "still life", kk: "[stɪl laɪf]" }
+                ],
+                answer: "C", answer_explanation_zh: "abstract art 即「抽象藝術」；landscape 是風景畫，portrait 是肖像，still life 是靜物畫。",
+                key_vocabulary: [{
+                    word: "abstract art", kk: "[ˋæbstrækt ɑrt]", ipa: "/ˈæbstrækt ɑːt/", part_of_speech: "n.", meaning_zh: "抽象藝術",
+                    phrase_examples: [
+                        { en: "Many people find abstract art difficult to understand.", zh: "許多人覺得抽象藝術很難懂。" },
+                        { en: "The exhibition features modern abstract art.", zh: "展覽展出的是現代抽象藝術。" }
+                    ],
+                    collocations: ["modern abstract art"], synonyms: ["non-representational art"]
+                }],
+                ielts_tip_zh: "藝術主題是 IELTS 的常客，需能區分不同藝術形式的專有名詞。"
+            },
+            {
+                id: 64, type: "MC", category: "The arts", source_page: 63,
+                question_en: "The ________ in the ballet was absolutely stunning, with perfectly synchronized movements.",
+                question_zh: "這齣芭蕾舞的________（編舞）絕對令人驚嘆，動作完美同步。",
+                options: [
+                    { label: "A", text: "orchestra", kk: "[ˋɔrkɪstrə]" },
+                    { label: "B", text: "rehearsal", kk: "[rɪˋhɝs!]" },
+                    { label: "C", text: "choreography", kk: "[ˏkɔrɪˋɑgrəfɪ]" },
+                    { label: "D", text: "sculpture", kk: "[ˋskʌlptʃɚ]" }
+                ],
+                answer: "C", answer_explanation_zh: "choreography 意為「編舞」，專指設計舞蹈動作的藝術。",
+                key_vocabulary: [{
+                    word: "choreography", kk: "[ˏkɔrɪˋɑgrəfɪ]", ipa: "/ˌkɒriˈɒɡrəfi/", part_of_speech: "n.", meaning_zh: "編舞（藝術）；舞蹈設計",
+                    phrase_examples: [
+                        { en: "He is famous for his innovative choreography.", zh: "他以創新的編舞而聞名。" },
+                        { en: "The choreography of the musical was complex.", zh: "這部音樂劇的編舞很複雜。" }
+                    ],
+                    collocations: ["innovative choreography"], synonyms: ["dance composition"]
+                }],
+                ielts_tip_zh: "這是一個拼字極易出錯的長單字，注意字首 ch 發 /k/ 音。"
+            },
+            {
+                id: 65, type: "MC", category: "Business & industry", source_page: 65,
+                question_en: "The national postal service used to have a ________ on delivering letters, but now there is competition.",
+                question_zh: "國家郵政服務過去在信件遞送上擁有________（壟斷），但現在有了競爭。",
+                options: [
+                    { label: "A", text: "deficit", kk: "[ˋdɛfəsɪt]" },
+                    { label: "B", text: "monopoly", kk: "[məˋnɑp!ɪ]" },
+                    { label: "C", text: "retail", kk: "[ˋritel]" },
+                    { label: "D", text: "dividend", kk: "[ˋdɪvəˏdɛnd]" }
+                ],
+                answer: "B", answer_explanation_zh: "monopoly 意為「壟斷、獨佔」，指單一企業或組織獨攬市場。",
+                key_vocabulary: [{
+                    word: "monopoly", kk: "[məˋnɑp!ɪ]", ipa: "/məˈnɒpəli/", part_of_speech: "n.", meaning_zh: "壟斷；獨佔",
+                    phrase_examples: [
+                        { en: "The government passed laws to prevent corporate monopolies.", zh: "政府通過法律以防止企業壟斷。" },
+                        { en: "They have no monopoly on good ideas.", zh: "好點子並非他們獨有。" }
+                    ],
+                    collocations: ["have a monopoly on", "prevent monopolies"], synonyms: ["exclusive control", "domination"]
+                }],
+                ielts_tip_zh: "探討全球化、大企業競爭或政府干預經濟的寫作核心字彙。"
+            },
+            {
+                id: 66, type: "TF", category: "Business & industry", source_page: 66,
+                question_en: "A recession is a period when the economy of a country is doing extremely well.",
+                question_zh: "「recession」是指一個國家的經濟表現極好的時期。（判斷對錯）",
+                options: [
+                    { label: "True", text: "正確" },
+                    { label: "False", text: "錯誤" }
+                ],
+                answer: "False", answer_explanation_zh: "recession 意為「經濟衰退、不景氣」，是負面的經濟狀態。",
+                key_vocabulary: [{
+                    word: "recession", kk: "[rɪˋsɛʃən]", ipa: "/rɪˈseʃn/", part_of_speech: "n.", meaning_zh: "經濟衰退；不景氣",
+                    phrase_examples: [
+                        { en: "The country is sliding into a deep recession.", zh: "該國正陷入嚴重的經濟衰退。" },
+                        { en: "Many businesses fail during a recession.", zh: "許多企業在經濟衰退期間倒閉。" }
+                    ],
+                    collocations: ["economic recession", "deep recession", "slide into recession"], synonyms: ["downturn", "slump", "depression"]
+                }],
+                ielts_tip_zh: "在閱讀財經類文章或描述圖表（Task 1）趨勢反轉時的關鍵名詞。"
+            },
+            {
+                id: 67, type: "MC", category: "Children & the family", source_page: 67,
+                question_en: "Parents who are extremely strict and demand complete obedience are described as ________.",
+                question_zh: "極其嚴格並要求絕對服從的父母被形容為________（獨裁/專制的）。",
+                options: [
+                    { label: "A", text: "lenient", kk: "[ˋliniənt]" },
+                    { label: "B", text: "tolerant", kk: "[ˋtɑlərənt]" },
+                    { label: "C", text: "authoritarian", kk: "[əˏθɔrəˋtɛrɪən]" },
+                    { label: "D", text: "rebellious", kk: "[rɪˋbɛljəs]" }
+                ],
+                answer: "C", answer_explanation_zh: "authoritarian 指「專制的、要求絕對服從的」；lenient 則是寬容的。",
+                key_vocabulary: [{
+                    word: "authoritarian", kk: "[əˏθɔrəˋtɛrɪən]", ipa: "/ɔːˌθɒrɪˈteəriən/", part_of_speech: "adj.", meaning_zh: "專制的；獨裁的",
+                    phrase_examples: [
+                        { en: "He had a very strict, authoritarian upbringing.", zh: "他從小受到的教養非常嚴格且專制。" },
+                        { en: "The school was run on authoritarian lines.", zh: "這所學校以專制的方式管理。" }
+                    ],
+                    collocations: ["authoritarian parents", "authoritarian regime"], synonyms: ["strict", "dictatorial", "tyrannical"]
+                }],
+                ielts_tip_zh: "探討家庭教育方式（Parenting styles）的進階形容詞。"
+            },
+            {
+                id: 68, type: "WORD_FORM", category: "Children & the family", source_page: 68,
+                question_en: "Her successful career can be partly attributed to her excellent ________ by her supportive parents.",
+                question_zh: "她成功的事業部分可歸功於支持她的父母給予她的良好________（教養）。（提示：u_ _ _ _ _ _ _ _g）",
+                options: [],
+                answer: "upbringing", answer_explanation_zh: "upbringing 指「撫育、教養」，強調童年時期受到的教育與照顧。",
+                key_vocabulary: [{
+                    word: "upbringing", kk: "[ˋʌpˏbrɪŋɪŋ]", ipa: "/ˈʌpbrɪŋɪŋ/", part_of_speech: "n.", meaning_zh: "教養；撫育",
+                    phrase_examples: [
+                        { en: "He had a very middle-class upbringing.", zh: "他有著非常中產階級的教養。" },
+                        { en: "Children with a stable upbringing tend to do better in school.", zh: "成長環境（教養）穩定的孩子往往在學校表現較好。" }
+                    ],
+                    collocations: ["strict upbringing", "stable upbringing"], synonyms: ["parenting", "rearing", "childhood"]
+                }],
+                ielts_tip_zh: "在 Speaking Part 1/2 談論家庭背景，或 Writing Task 2 探討先天與後天 (Nature vs. Nurture) 影響時必用。"
+            },
+            {
+                id: 69, type: "MC", category: "Crime & the law", source_page: 69,
+                question_en: "Some people argue that the death penalty is not an effective ________ against violent crime.",
+                question_zh: "有些人主張死刑對暴力犯罪並不是一種有效的________（威懾手段）。",
+                options: [
+                    { label: "A", text: "incentive", kk: "[ɪnˋsɛntɪv]" },
+                    { label: "B", text: "deterrent", kk: "[dɪˋtɝənt]" },
+                    { label: "C", text: "motive", kk: "[ˋmotɪv]" },
+                    { label: "D", text: "reward", kk: "[rɪˋwɔrd]" }
+                ],
+                answer: "B", answer_explanation_zh: "deterrent 指「威嚇物、阻礙物」，常與犯罪預防搭配使用。",
+                key_vocabulary: [{
+                    word: "deterrent", kk: "[dɪˋtɝənt]", ipa: "/dɪˈterənt/", part_of_speech: "n.", meaning_zh: "威嚇物；遏制力量",
+                    phrase_examples: [
+                        { en: "Cameras are a major deterrent to crime.", zh: "監視器是對犯罪的一大威嚇。" },
+                        { en: "They hope the fine will act as a deterrent.", zh: "他們希望罰款能起到嚇阻作用。" }
+                    ],
+                    collocations: ["act as a deterrent", "effective deterrent"], synonyms: ["discouragement", "obstacle", "restraint"]
+                }],
+                ielts_tip_zh: "寫作 Task 2 最常考的議題之一就是犯罪與懲罰，deterrent 是該主題的 7.0+ 核心單字。"
+            },
+            {
+                id: 70, type: "FILL", category: "Crime & the law", source_page: 70,
+                question_en: "The main aim of the prison system should be to ________ offenders so they can re-enter society.",
+                question_zh: "監獄系統的主要目標應該是________（使康復/改造）罪犯，以便他們能重新進入社會。",
+                options: [
+                    { label: "punish", text: "懲罰" },
+                    { label: "rehabilitate", text: "使康復；改造" },
+                    { label: "interrogate", text: "審問" },
+                    { label: "prosecute", text: "起訴" }
+                ],
+                answer: "rehabilitate", answer_explanation_zh: "rehabilitate 在法律與醫療範疇中，指「使恢復正常生活、幫助（罪犯）改過自新」。",
+                key_vocabulary: [{
+                    word: "rehabilitate", kk: "[ˏrihəˋbɪləˏtet]", ipa: "/ˌriːhəˈbɪlɪteɪt/", part_of_speech: "v.", meaning_zh: "使康復；改造（罪犯）",
+                    phrase_examples: [
+                        { en: "The prison service should try to rehabilitate prisoners.", zh: "監獄管理部門應該設法改造囚犯。" },
+                        { en: "He is still rehabilitating from his knee injury.", zh: "他仍在從膝傷中康復。（醫療用途）" }
+                    ],
+                    collocations: ["rehabilitate offenders", "rehabilitate prisoners"], synonyms: ["restore", "recover", "reintegrate"]
+                }],
+                ielts_tip_zh: "與 deterrent (嚇阻) 和 punish (懲罰) 相對應，是討論司法系統「教化功能」的必備單字。"
+            },
+            {
+                id: 71, type: "MC", category: "Education", source_page: 71,
+                question_en: "A ________ is someone who is older than the usual age for college or university students.",
+                question_zh: "________（成人學生/高齡學生）是指年紀大於一般大專院校學生年齡的人。",
+                options: [
+                    { label: "A", text: "freshman", kk: "[ˋfrɛʃmən]" },
+                    { label: "B", text: "sophomore", kk: "[ˋsɑfəˏmor]" },
+                    { label: "C", text: "graduate", kk: "[ˋgrædʒʊɪt]" },
+                    { label: "D", text: "mature student", kk: "[məˋtʃʊr ˋstjudnt]" }
+                ],
+                answer: "D", answer_explanation_zh: "mature student 專指「較晚就讀大學的成年學生」，在英國/澳洲教育體系中很常見。",
+                key_vocabulary: [{
+                    word: "mature student", kk: "[məˋtʃʊr ˋstjudnt]", ipa: "/məˈtʃʊə ˈstjuːdnt/", part_of_speech: "n.", meaning_zh: "成人學生；高齡學生",
+                    phrase_examples: [
+                        { en: "Universities are encouraging more mature students to enroll.", zh: "大學正在鼓勵更多成人學生報名就讀。" },
+                        { en: "As a mature student, she brought a lot of life experience to the class.", zh: "身為一名成人學生，她為班上帶來了許多生活經驗。" }
+                    ],
+                    collocations: ["enroll as a mature student"], synonyms: ["adult learner"]
+                }],
+                ielts_tip_zh: "在 Listening Section 3 探討大學生活或入學諮詢時非常容易出現的名詞。"
+            },
+            {
+                id: 72, type: "FILL", category: "Education", source_page: 72,
+                question_en: "The government has launched a campaign to improve adult ________ in rural areas.",
+                question_zh: "政府發起了一項運動，以提高農村地區成人的________（讀寫能力/識字率）。",
+                options: [
+                    { label: "numeracy", text: "算術能力" },
+                    { label: "fluency", text: "流利度" },
+                    { label: "literacy", text: "讀寫能力" },
+                    { label: "truancy", text: "逃學" }
+                ],
+                answer: "literacy", answer_explanation_zh: "literacy 指「讀寫能力或識字率」；而 numeracy 則是算數能力。",
+                key_vocabulary: [{
+                    word: "literacy", kk: "[ˋlɪtərəsɪ]", ipa: "/ˈlɪtərəsi/", part_of_speech: "n.", meaning_zh: "讀寫能力；識字",
+                    phrase_examples: [
+                        { en: "The country has a literacy rate of almost 98%.", zh: "該國的識字率幾乎達到 98%。" },
+                        { en: "Computer literacy is essential for this job.", zh: "這份工作必須具備電腦操作能力（電腦素養）。" }
+                    ],
+                    collocations: ["literacy rate", "computer literacy", "financial literacy"], synonyms: ["ability to read and write"]
+                }],
+                ielts_tip_zh: "探討教育普及化與國家發展 (Task 2) 時的必備專有名詞。"
+            },
+            {
+                id: 73, type: "MC", category: "The environment", source_page: 73,
+                question_en: "Supermarkets are increasingly using ________ packaging to reduce environmental damage.",
+                question_zh: "超市越來越多地使用________（生物可分解的）包裝以減少對環境的破壞。",
+                options: [
+                    { label: "A", text: "synthetic", kk: "[sɪnˋθɛtɪk]" },
+                    { label: "B", text: "biodegradable", kk: "[ˏbaɪodɪˋgredəb!]" },
+                    { label: "C", text: "renewable", kk: "[rɪˋnuəb!]" },
+                    { label: "D", text: "toxic", kk: "[ˋtɑksɪk]" }
+                ],
+                answer: "B", answer_explanation_zh: "biodegradable 指「生物可分解的」，bio-(生物) + degrade(降解) + -able(可...的)。",
+                key_vocabulary: [{
+                    word: "biodegradable", kk: "[ˏbaɪodɪˋgredəb!]", ipa: "/ˌbaɪəʊdɪˈɡreɪdəbl/", part_of_speech: "adj.", meaning_zh: "生物可分解的",
+                    phrase_examples: [
+                        { en: "We should use biodegradable materials instead of plastic.", zh: "我們應該使用生物可分解材料來代替塑膠。" },
+                        { en: "All our products are 100% biodegradable.", zh: "我們所有的產品都是 100% 生物可分解的。" }
+                    ],
+                    collocations: ["biodegradable plastic", "biodegradable waste"], synonyms: ["environmentally friendly", "compostable"]
+                }],
+                ielts_tip_zh: "環境保護與污染防制（Environment & Pollution）是最常考的四大主題之一，這字是 7.5 分以上的關鍵。"
+            },
+            {
+                id: 74, type: "FILL", category: "The environment", source_page: 74,
+                question_en: "Pollution can have disastrous effects on the fragile ________ of the coral reefs.",
+                question_zh: "污染會對珊瑚礁脆弱的________（生態系統）造成災難性的影響。",
+                options: [
+                    { label: "climate", text: "氣候" },
+                    { label: "habitat", text: "棲息地" },
+                    { label: "ecosystem", text: "生態系統" },
+                    { label: "atmosphere", text: "大氣層" }
+                ],
+                answer: "ecosystem", answer_explanation_zh: "ecosystem 意指「生態系統」，涵蓋該區域所有的生物與環境的互動。",
+                key_vocabulary: [{
+                    word: "ecosystem", kk: "[ˋɛkoˏsɪstəm]", ipa: "/ˈiːkəʊsɪstəm/", part_of_speech: "n.", meaning_zh: "生態系統",
+                    phrase_examples: [
+                        { en: "The forest fire destroyed the local ecosystem.", zh: "森林大火摧毀了當地的生態系統。" },
+                        { en: "We must protect the delicate marine ecosystem.", zh: "我們必須保護脆弱的海洋生態系統。" }
+                    ],
+                    collocations: ["fragile ecosystem", "marine ecosystem"], synonyms: ["ecological system"]
+                }],
+                ielts_tip_zh: "Listening Section 4 科普演講與 Reading 自然類文章必出字彙。"
+            },
+            {
+                id: 75, type: "MC", category: "Food & diet", source_page: 75,
+                question_en: "Millions of children in developing countries are severely ________ due to a lack of proper food.",
+                question_zh: "開發中國家數以百萬計的兒童因缺乏適當的食物而嚴重________（營養不良）。",
+                options: [
+                    { label: "A", text: "obese", kk: "[oˋbis]" },
+                    { label: "B", text: "malnourished", kk: "[mælˋnɝɪʃt]" },
+                    { label: "C", text: "dehydrated", kk: "[diˋhaɪdretɪd]" },
+                    { label: "D", text: "overweight", kk: "[ˏovɚˋwet]" }
+                ],
+                answer: "B", answer_explanation_zh: "malnourished 意指「營養不良的」，字首 mal- 代表「壞、不良」。",
+                key_vocabulary: [{
+                    word: "malnourished", kk: "[mælˋnɝɪʃt]", ipa: "/ˌmælˈnʌrɪʃt/", part_of_speech: "adj.", meaning_zh: "營養不良的",
+                    phrase_examples: [
+                        { en: "The rescued animals were severely malnourished.", zh: "獲救的動物嚴重營養不良。" },
+                        { en: "Malnourished children are more vulnerable to diseases.", zh: "營養不良的兒童更容易感染疾病。" }
+                    ],
+                    collocations: ["severely malnourished"], synonyms: ["undernourished", "starving"]
+                }],
+                ielts_tip_zh: "探討全球糧食問題或貧窮議題 (Global issues) 的進階詞彙。"
+            },
+            {
+                id: 76, type: "MC", category: "Food & diet", source_page: 76,
+                question_en: "A diet high in saturated fat increases the levels of ________ in your blood.",
+                question_zh: "高飽和脂肪的飲食會增加血液中________（膽固醇）的濃度。",
+                options: [
+                    { label: "A", text: "protein", kk: "[ˋprotin]" },
+                    { label: "B", text: "calcium", kk: "[ˋkælsɪəm]" },
+                    { label: "C", text: "cholesterol", kk: "[kəˋlɛstəˏrol]" },
+                    { label: "D", text: "carbohydrate", kk: "[ˏkɑrboˋhaɪdret]" }
+                ],
+                answer: "C", answer_explanation_zh: "cholesterol 是膽固醇，protein 是蛋白質，calcium 是鈣，carbohydrate 是碳水化合物。",
+                key_vocabulary: [{
+                    word: "cholesterol", kk: "[kəˋlɛstəˏrol]", ipa: "/kəˈlestərɒl/", part_of_speech: "n.", meaning_zh: "膽固醇",
+                    phrase_examples: [
+                        { en: "Exercise can help lower your cholesterol levels.", zh: "運動有助於降低你的膽固醇數值。" },
+                        { en: "He has a high cholesterol problem.", zh: "他有膽固醇過高的問題。" }
+                    ],
+                    collocations: ["high/low cholesterol", "cholesterol level"], synonyms: []
+                }],
+                ielts_tip_zh: "Reading 醫療健康類（如心血管疾病探討）的高頻專有名詞。"
+            },
+            {
+                id: 77, type: "MC", category: "Geography", source_page: 78,
+                question_en: "The rapid expansion of the city into the surrounding countryside is known as ________.",
+                question_zh: "城市迅速向周圍鄉村擴張的現象被稱為________（城市蔓延）。",
+                options: [
+                    { label: "A", text: "urban sprawl", kk: "[ˋɝbən sprɔl]" },
+                    { label: "B", text: "gentrification", kk: "[ˏdʒɛntrəfɪˋkeʃən]" },
+                    { label: "C", text: "globalization", kk: "[ˏglob!ɪˋzeʃən]" },
+                    { label: "D", text: "deforestation", kk: "[dɪˏfɔrɪsˋteʃən]" }
+                ],
+                answer: "A", answer_explanation_zh: "urban sprawl (城市蔓延) 指都市缺乏規劃地向郊區擴散，通常帶有負面意涵。",
+                key_vocabulary: [{
+                    word: "urban sprawl", kk: "[ˋɝbən sprɔl]", ipa: "/ˌɜːbən ˈsprɔːl/", part_of_speech: "n.", meaning_zh: "都市蔓延（缺乏規劃的擴張）",
+                    phrase_examples: [
+                        { en: "Urban sprawl has destroyed much of the surrounding greenbelt.", zh: "城市蔓延摧毀了周圍大部分的綠帶。" },
+                        { en: "The government is trying to restrict urban sprawl.", zh: "政府正試圖限制城市無序蔓延。" }
+                    ],
+                    collocations: ["restrict urban sprawl", "effects of urban sprawl"], synonyms: ["suburban sprawl"]
+                }],
+                ielts_tip_zh: "Writing Task 2 探討都市化 (Urbanization) 的負面影響時，是能展現深度的高級專有名詞。"
+            },
+            {
+                id: 78, type: "FILL", category: "Geography", source_page: 79,
+                question_en: "Many rural areas are suffering from ________ as young people move to cities for work.",
+                question_zh: "由於許多年輕人搬到城市工作，許多鄉村地區正面臨________（人口減少）。",
+                options: [
+                    { label: "overpopulation", text: "人口過剩" },
+                    { label: "depopulation", text: "人口減少" },
+                    { label: "migration", text: "遷移" },
+                    { label: "pollution", text: "污染" }
+                ],
+                answer: "depopulation", answer_explanation_zh: "depopulation 指「人口減少」，字首 de- 有去除、減少之意。",
+                key_vocabulary: [{
+                    word: "depopulation", kk: "[diˏpɑpjəˋleʃən]", ipa: "/diːˌpɒpjuˈleɪʃn/", part_of_speech: "n.", meaning_zh: "人口減少",
+                    phrase_examples: [
+                        { en: "Rural depopulation is a major problem in many developed countries.", zh: "農村人口減少是許多已開發國家的主要問題。" },
+                        { en: "The village has suffered from severe depopulation over the last decade.", zh: "過去十年間，這個村莊經歷了嚴重的人口流失。" }
+                    ],
+                    collocations: ["rural depopulation", "suffer from depopulation"], synonyms: ["population decline"]
+                }],
+                ielts_tip_zh: "與 urbanisation (都市化) 是相對應的常考概念。"
+            },
+            {
+                id: 79, type: "MC", category: "Global problems", source_page: 80,
+                question_en: "The earthquake caused widespread ________ across the entire region.",
+                question_zh: "這場地震在整個地區造成了廣泛的________（破壞 / 滿目瘡痍）。",
+                options: [
+                    { label: "A", text: "preservation", kk: "[ˏprɛzɚˋveʃən]" },
+                    { label: "B", text: "devastation", kk: "[ˏdɛvəsˋteʃən]" },
+                    { label: "C", text: "conservation", kk: "[ˏkɑnsɚˋveʃən]" },
+                    { label: "D", text: "construction", kk: "[kənˋstrʌkʃən]" }
+                ],
+                answer: "B", answer_explanation_zh: "devastation 意為「毀滅、嚴重破壞」，常用來形容天災人禍的後果。",
+                key_vocabulary: [{
+                    word: "devastation", kk: "[ˏdɛvəsˋteʃən]", ipa: "/ˌdevəˈsteɪʃn/", part_of_speech: "n.", meaning_zh: "毀壞；滿目瘡痍",
+                    phrase_examples: [
+                        { en: "The hurricane left a trail of devastation.", zh: "颶風過後留下了一片滿目瘡痍。" },
+                        { en: "It is hard to describe the absolute devastation caused by the bomb.", zh: "很難描述炸彈造成的絕對毀滅。" }
+                    ],
+                    collocations: ["widespread devastation", "cause devastation"], synonyms: ["destruction", "ruin", "damage"]
+                }],
+                ielts_tip_zh: "Reading 中描述自然災害或戰爭影響時的關鍵字彙。"
+            },
+            {
+                id: 80, type: "MC", category: "Global problems", source_page: 81,
+                question_en: "Thousands of ________ have fled across the border to escape the civil war.",
+                question_zh: "成千上萬的________（難民）已經越過邊境逃離內戰。",
+                options: [
+                    { label: "A", text: "immigrants", kk: "[ˋɪməgrənts]" },
+                    { label: "B", text: "tourists", kk: "[ˋtʊrɪsts]" },
+                    { label: "C", text: "refugees", kk: "[ˏrɛfjʊˋdʒiz]" },
+                    { label: "D", text: "nomads", kk: "[ˋnomædz]" }
+                ],
+                answer: "C", answer_explanation_zh: "refugee 指「因戰爭、迫害或天災而逃離國家的難民」；immigrant 是移民。",
+                key_vocabulary: [{
+                    word: "refugee", kk: "[ˏrɛfjʊˋdʒi]", ipa: "/ˌrefjuˈdʒiː/", part_of_speech: "n.", meaning_zh: "難民",
+                    phrase_examples: [
+                        { en: "The camp provided shelter for thousands of political refugees.", zh: "這個營地為數千名政治難民提供了庇護。" },
+                        { en: "There has been a steady flow of refugees from the war zone.", zh: "不斷有難民從戰區湧出。" }
+                    ],
+                    collocations: ["political refugees", "refugee camp"], synonyms: ["asylum seeker", "displaced person"]
+                }],
+                ielts_tip_zh: "探討國際關係與全球性議題時必須認識的字。"
+            },
+            {
+                id: 81, type: "MC", category: "Healthcare", source_page: 82,
+                question_en: "Working in an office usually means having a very ________ lifestyle, with little physical exercise.",
+                question_zh: "在辦公室工作通常意味著過著非常________（久坐不動的）生活方式，很少有體育鍛鍊。",
+                options: [
+                    { label: "A", text: "active", kk: "[ˋæktɪv]" },
+                    { label: "B", text: "sedentary", kk: "[ˋsɛdnˏtɛrɪ]" },
+                    { label: "C", text: "nomadic", kk: "[noˋmædɪk]" },
+                    { label: "D", text: "strenuous", kk: "[ˋstrɛnjʊəs]" }
+                ],
+                answer: "B", answer_explanation_zh: "sedentary 指「需要久坐的、缺乏運動的」，常與 lifestyle 或 job 搭配。",
+                key_vocabulary: [{
+                    word: "sedentary", kk: "[ˋsɛdnˏtɛrɪ]", ipa: "/ˈsedntri/", part_of_speech: "adj.", meaning_zh: "久坐不動的；缺乏運動的",
+                    phrase_examples: [
+                        { en: "He has a very sedentary job.", zh: "他的工作需要久坐不動。" },
+                        { en: "A sedentary lifestyle can lead to weight gain.", zh: "久坐不動的生活方式可能導致體重增加。" }
+                    ],
+                    collocations: ["sedentary lifestyle", "sedentary job"], synonyms: ["inactive", "sitting"]
+                }],
+                ielts_tip_zh: "寫作 Task 2 討論現代人肥胖或健康問題時，sedentary lifestyle 是必拿高分的詞組。"
+            },
+            {
+                id: 82, type: "FILL", category: "Healthcare", source_page: 83,
+                question_en: "________ medicine focuses on treating the whole person, including their mind and body, rather than just the symptoms.",
+                question_zh: "________（全人/整全）醫學著重於治療整個人，包含身心，而不僅僅是治療症狀。",
+                options: [
+                    { label: "Traditional", text: "傳統的" },
+                    { label: "Holistic", text: "整全的；整體的" },
+                    { label: "Alternative", text: "替代的" },
+                    { label: "Clinical", text: "臨床的" }
+                ],
+                answer: "Holistic", answer_explanation_zh: "holistic 強調「整體的、全面的」，holistic medicine 即為全人醫療或整體療法。",
+                key_vocabulary: [{
+                    word: "holistic", kk: "[hoˋlɪstɪk]", ipa: "/həˈlɪstɪk/", part_of_speech: "adj.", meaning_zh: "整體的；全人的",
+                    phrase_examples: [
+                        { en: "My doctor takes a holistic approach to disease.", zh: "我的醫生對疾病採取全人治療的觀點。" },
+                        { en: "We need a holistic approach to the environment.", zh: "我們需要從整體的角度來看待環境問題。" }
+                    ],
+                    collocations: ["holistic approach", "holistic medicine"], synonyms: ["comprehensive", "integrated"]
+                }],
+                ielts_tip_zh: "不僅用於醫療，在討論教育 (holistic education) 或解決方案時，也能取代 comprehensive 展現高階字彙力。"
+            },
+            {
+                id: 83, type: "MC", category: "The media", source_page: 84,
+                question_en: "Many governments impose strict ________ on the internet to control what citizens can read or watch.",
+                question_zh: "許多政府對網路實施嚴格的________（審查制度），以控制公民能閱讀或觀看的內容。",
+                options: [
+                    { label: "A", text: "censorship", kk: "[ˋsɛnsɚˏʃɪp]" },
+                    { label: "B", text: "propaganda", kk: "[ˏprɑpəˋgændə]" },
+                    { label: "C", text: "journalism", kk: "[ˋdʒɝn!ˏɪzəm]" },
+                    { label: "D", text: "broadcast", kk: "[ˋbrɔdˏkæst]" }
+                ],
+                answer: "A", answer_explanation_zh: "censorship 意為「審查制度」，尤指對媒體、書籍、網路內容的控制。",
+                key_vocabulary: [{
+                    word: "censorship", kk: "[ˋsɛnsɚˏʃɪp]", ipa: "/ˈsensəʃɪp/", part_of_speech: "n.", meaning_zh: "審查制度",
+                    phrase_examples: [
+                        { en: "The government has imposed strict censorship on the press.", zh: "政府對新聞界實施了嚴格的審查制度。" },
+                        { en: "Internet censorship is a controversial issue.", zh: "網路審查是一個具爭議性的議題。" }
+                    ],
+                    collocations: ["strict censorship", "impose censorship"], synonyms: ["control", "restriction"]
+                }],
+                ielts_tip_zh: "在探討媒體自由 (Freedom of speech) 的文章中是核心字彙。"
+            },
+            {
+                id: 84, type: "FILL", category: "The media", source_page: 85,
+                question_en: "Celebrities constantly complain about being chased by the ________ wherever they go.",
+                question_zh: "名人經常抱怨無論去哪裡都會被________（狗仔隊）追逐。",
+                options: [
+                    { label: "correspondents", text: "特派員" },
+                    { label: "broadcasters", text: "廣播員" },
+                    { label: "paparazzi", text: "狗仔隊" },
+                    { label: "editors", text: "編輯" }
+                ],
+                answer: "paparazzi", answer_explanation_zh: "paparazzi 是複數名詞，專指偷拍名人的「狗仔隊」。單數為 paparazzo。",
+                key_vocabulary: [{
+                    word: "paparazzi", kk: "[ˏpɑpəˋrɑtsɪ]", ipa: "/ˌpæpəˈrætsi/", part_of_speech: "n.", meaning_zh: "狗仔隊",
+                    phrase_examples: [
+                        { en: "She was surrounded by paparazzi as she left the restaurant.", zh: "她離開餐廳時被狗仔隊包圍了。" },
+                        { en: "The paparazzi are notorious for invading celebrities' privacy.", zh: "狗仔隊因侵犯名人隱私而惡名昭彰。" }
+                    ],
+                    collocations: ["chased by paparazzi", "paparazzi photographers"], synonyms: ["celebrity photographers"]
+                }],
+                ielts_tip_zh: "探討隱私權與媒體道德 (Media ethics) 的高頻字。"
+            },
+            {
+                id: 85, type: "MC", category: "Men & women", source_page: 86,
+                question_en: "A male ________ is a man who believes that men are naturally better, smarter, or more important than women.",
+                question_zh: "大男人________（沙文主義者）是指認為男人天生就比女人更好、更聰明或更重要的男人。",
+                options: [
+                    { label: "A", text: "feminist", kk: "[ˋfɛmənɪst]" },
+                    { label: "B", text: "chauvinist", kk: "[ˋʃovɪnɪst]" },
+                    { label: "C", text: "activist", kk: "[ˋæktəvɪst]" },
+                    { label: "D", text: "optimist", kk: "[ˋɑptəmɪst]" }
+                ],
+                answer: "B", answer_explanation_zh: "chauvinist 指「沙文主義者」，尤指大男人主義者 (male chauvinist)。",
+                key_vocabulary: [{
+                    word: "chauvinist", kk: "[ˋʃovɪnɪst]", ipa: "/ˈʃəʊvɪnɪst/", part_of_speech: "n.", meaning_zh: "沙文主義者；大男人主義者",
+                    phrase_examples: [
+                        { en: "He is a classic male chauvinist.", zh: "他是個典型的大男人主義者。" },
+                        { en: "She accused him of being a chauvinist.", zh: "她指責他是個沙文主義者。" }
+                    ],
+                    collocations: ["male chauvinist"], synonyms: ["sexist", "misogynist"]
+                }],
+                ielts_tip_zh: "在探討性別平權 (Gender equality) 與刻板印象時的關鍵字彙。"
+            },
+            {
+                id: 86, type: "FILL", category: "Men & women", source_page: 87,
+                question_en: "Many women complain that they cannot reach top management positions due to the invisible ________.",
+                question_zh: "許多女性抱怨，由於無形的________（玻璃天花板），她們無法達到高階管理職位。",
+                options: [
+                    { label: "iron curtain", text: "鐵幕" },
+                    { label: "glass ceiling", text: "玻璃天花板" },
+                    { label: "stone wall", text: "石牆" },
+                    { label: "closed door", text: "緊閉的門" }
+                ],
+                answer: "glass ceiling", answer_explanation_zh: "glass ceiling 是指社會上（尤其是職場）阻礙女性或少數族群晉升的無形障礙。",
+                key_vocabulary: [{
+                    word: "glass ceiling", kk: "[glæs ˋsilɪŋ]", ipa: "/ˌɡlɑːs ˈsiːlɪŋ/", part_of_speech: "n.", meaning_zh: "玻璃天花板（升遷的無形障礙）",
+                    phrase_examples: [
+                        { en: "She was the first woman to break through the glass ceiling in that company.", zh: "她是該公司第一位打破玻璃天花板的女性。" },
+                        { en: "The glass ceiling prevents women from reaching executive roles.", zh: "玻璃天花板阻礙了女性擔任高階主管職務。" }
+                    ],
+                    collocations: ["break through the glass ceiling", "hit the glass ceiling"], synonyms: ["invisible barrier"]
+                }],
+                ielts_tip_zh: "IELTS 寫作極佳的加分詞彙，用來形容職場的不公平待遇。"
+            },
+            {
+                id: 87, type: "MC", category: "Money & finance", source_page: 89,
+                question_en: "He bought an ________ diamond ring that he couldn't really afford.",
+                question_zh: "他買了一枚他其實負擔不起的________（奢侈的）鑽戒。",
+                options: [
+                    { label: "A", text: "economical", kk: "[ˏikəˋnɑmɪk!]" },
+                    { label: "B", text: "extravagant", kk: "[ɪkˋstrævəgənt]" },
+                    { label: "C", text: "frugal", kk: "[ˋfrug!]" },
+                    { label: "D", text: "affordable", kk: "[əˋfordəb!]" }
+                ],
+                answer: "B", answer_explanation_zh: "extravagant 意指「奢侈的、揮霍的」；economical 和 frugal 皆指節儉的。",
+                key_vocabulary: [{
+                    word: "extravagant", kk: "[ɪkˋstrævəgənt]", ipa: "/ɪkˈstrævəɡənt/", part_of_speech: "adj.", meaning_zh: "奢侈的；揮霍的",
+                    phrase_examples: [
+                        { en: "It was very extravagant of you to buy strawberries out of season.", zh: "你在非產季買草莓真是太奢侈了。" },
+                        { en: "He leads an extravagant lifestyle.", zh: "他過著奢華的生活。" }
+                    ],
+                    collocations: ["extravagant lifestyle", "extravagant spending"], synonyms: ["lavish", "wasteful", "luxurious"]
+                }],
+                ielts_tip_zh: "在探討現代消費主義 (Consumerism) 或理財觀念時的高階用字。"
+            },
+            {
+                id: 88, type: "MC", category: "Money & finance", source_page: 90,
+                question_en: "If you spend more money than you have in your bank account, you have an ________.",
+                question_zh: "如果你花的錢超過了你銀行帳戶裡的錢，你就會產生________（透支）。",
+                options: [
+                    { label: "A", text: "allowance", kk: "[əˋlaʊəns]" },
+                    { label: "B", text: "instalment", kk: "[ɪnˋstɔlmənt]" },
+                    { label: "C", text: "overdraft", kk: "[ˋovɚˏdræft]" },
+                    { label: "D", text: "investment", kk: "[ɪnˋvɛstmənt]" }
+                ],
+                answer: "C", answer_explanation_zh: "overdraft 指「銀行透支（提款額超過存款餘額）」。",
+                key_vocabulary: [{
+                    word: "overdraft", kk: "[ˋovɚˏdræft]", ipa: "/ˈəʊvədrɑːft/", part_of_speech: "n.", meaning_zh: "透支",
+                    phrase_examples: [
+                        { en: "I have to pay off my overdraft before I can get a loan.", zh: "我必須先還清透支款項才能申請貸款。" },
+                        { en: "The bank offers an interest-free overdraft to students.", zh: "銀行為學生提供免息透支服務。" }
+                    ],
+                    collocations: ["pay off an overdraft", "interest-free overdraft"], synonyms: ["deficit"]
+                }],
+                ielts_tip_zh: "Listening Section 1 銀行開戶或個人理財情境的常考單字。"
+            },
+            {
+                id: 89, type: "MC", category: "On the road", source_page: 91,
+                question_en: "Traffic ________ in the city centre has become a nightmare during rush hour.",
+                question_zh: "在尖峰時段，市中心的交通________（擁塞）已經成了一場惡夢。",
+                options: [
+                    { label: "A", text: "congestion", kk: "[kənˋdʒɛstʃən]" },
+                    { label: "B", text: "collision", kk: "[kəˋlɪʒən]" },
+                    { label: "C", text: "deviation", kk: "[ˏdivɪˋeʃən]" },
+                    { label: "D", text: "emission", kk: "[ɪˋmɪʃən]" }
+                ],
+                answer: "A", answer_explanation_zh: "congestion 意指「擁塞」，traffic congestion 是交通堵塞的正式說法。",
+                key_vocabulary: [{
+                    word: "congestion", kk: "[kənˋdʒɛstʃən]", ipa: "/kənˈdʒestʃən/", part_of_speech: "n.", meaning_zh: "擁塞；擠滿",
+                    phrase_examples: [
+                        { en: "The new bridge should help ease traffic congestion.", zh: "新橋樑應該有助於緩解交通壅塞。" },
+                        { en: "Parking controls are necessary to reduce congestion.", zh: "停車管制對於減少擁塞是必要的。" }
+                    ],
+                    collocations: ["traffic congestion", "ease congestion"], synonyms: ["traffic jam", "bottleneck"]
+                }],
+                ielts_tip_zh: "Writing Task 2 探討城市交通問題時，比 traffic jam 更具學術感的高分詞彙。"
+            },
+            {
+                id: 90, type: "FILL", category: "On the road", source_page: 92,
+                question_en: "The area has been strictly pedestrianized, meaning no cars are allowed, only ________.",
+                question_zh: "這個地區已被嚴格規劃為行人專用區，意思是禁止車輛通行，只允許________（行人）。",
+                options: [
+                    { label: "commuters", text: "通勤者" },
+                    { label: "pedestrians", text: "行人" },
+                    { label: "motorists", text: "駕駛人" },
+                    { label: "cyclists", text: "自行車騎士" }
+                ],
+                answer: "pedestrians", answer_explanation_zh: "pedestrian 專指「步行者、行人」。",
+                key_vocabulary: [{
+                    word: "pedestrian", kk: "[pəˋdɛstrɪən]", ipa: "/pəˈdestriən/", part_of_speech: "n.", meaning_zh: "行人",
+                    phrase_examples: [
+                        { en: "The car hit a pedestrian who was crossing the road.", zh: "那輛車撞到了正在過馬路的行人。" },
+                        { en: "Pedestrians must use the designated crossing.", zh: "行人必須使用指定的斑馬線。" }
+                    ],
+                    collocations: ["pedestrian crossing", "pedestrian precinct/zone"], synonyms: ["walker", "person on foot"]
+                }],
+                ielts_tip_zh: "Listening 地圖題常出現 pedestrian crossing (斑馬線) 或 pedestrian zone (行人徒步區)。"
+            },
+            {
+                id: 91, type: "MC", category: "Science & technology", source_page: 93,
+                question_en: "Scientists have made a major ________ in the treatment of cancer.",
+                question_zh: "科學家在癌症治療上取得了重大的________（突破）。",
+                options: [
+                    { label: "A", text: "breakdown", kk: "[ˋbrekˏdaʊn]" },
+                    { label: "B", text: "breakthrough", kk: "[ˋbrekˏθru]" },
+                    { label: "C", text: "setback", kk: "[ˋsɛtˏbæk]" },
+                    { label: "D", text: "drawback", kk: "[ˋdrɔˏbæk]" }
+                ],
+                answer: "B", answer_explanation_zh: "breakthrough 指「突破、重大進展」，通常帶有正面的創新意義。",
+                key_vocabulary: [{
+                    word: "breakthrough", kk: "[ˋbrekˏθru]", ipa: "/ˈbreɪkθruː/", part_of_speech: "n.", meaning_zh: "突破；重大進展",
+                    phrase_examples: [
+                        { en: "The discovery is a major breakthrough in modern medicine.", zh: "這項發現是現代醫學的重大突破。" },
+                        { en: "They are on the verge of a technological breakthrough.", zh: "他們正處於科技突破的邊緣。" }
+                    ],
+                    collocations: ["major breakthrough", "scientific breakthrough"], synonyms: ["advance", "development", "step forward"]
+                }],
+                ielts_tip_zh: "描述科技、醫療或科學創新時的必備名詞。"
+            },
+            {
+                id: 92, type: "MC", category: "Science & technology", source_page: 94,
+                question_en: "Modifying the DNA of crops to make them resistant to pests is an example of ________.",
+                question_zh: "修改農作物的 DNA 以使其具有抗蟲害能力是________（基因工程）的一個例子。",
+                options: [
+                    { label: "A", text: "cloning", kk: "[ˋklonɪŋ]" },
+                    { label: "B", text: "genetic engineering", kk: "[dʒəˋnɛtɪk ˏɛndʒəˋnɪrɪŋ]" },
+                    { label: "C", text: "automation", kk: "[ˏɔtəˋmeʃən]" },
+                    { label: "D", text: "cybernetics", kk: "[ˏsaɪbɚˋnɛtɪks]" }
+                ],
+                answer: "B", answer_explanation_zh: "genetic engineering 即「基因工程」，指人為修改生物的遺傳物質。",
+                key_vocabulary: [{
+                    word: "genetic engineering", kk: "[dʒəˋnɛtɪk ˏɛndʒəˋnɪrɪŋ]", ipa: "/dʒəˌnetɪk ˌendʒɪˈnɪərɪŋ/", part_of_speech: "n.", meaning_zh: "基因工程",
+                    phrase_examples: [
+                        { en: "Genetic engineering could revolutionize agriculture.", zh: "基因工程可能會徹底改變農業。" },
+                        { en: "There are many ethical debates surrounding genetic engineering.", zh: "圍繞著基因工程有許多道德倫理上的辯論。" }
+                    ],
+                    collocations: ["advances in genetic engineering"], synonyms: ["genetic modification"]
+                }],
+                ielts_tip_zh: "科技倫理、基改食品 (GM foods) 相關考題的絕對核心名詞。"
+            },
+            {
+                id: 93, type: "MC", category: "Sport", source_page: 96,
+                question_en: "The stadium was packed with thousands of cheering ________.",
+                question_zh: "體育場擠滿了數以千計歡呼的________（觀眾）。",
+                options: [
+                    { label: "A", text: "spectators", kk: "[spɛkˋtetɚz]" },
+                    { label: "B", text: "viewers", kk: "[ˋvjuɚz]" },
+                    { label: "C", text: "audiences", kk: "[ˋɔdɪənsɪz]" },
+                    { label: "D", text: "competitors", kk: "[kəmˋpɛtətɚz]" }
+                ],
+                answer: "A", answer_explanation_zh: "spectator 專指「（體育比賽等活動的）現場觀眾」；viewer 指電視觀眾，audience 多指戲劇或音樂會觀眾。",
+                key_vocabulary: [{
+                    word: "spectator", kk: "[spɛkˋtetɚ]", ipa: "/spekˈteɪtə/", part_of_speech: "n.", meaning_zh: "（體育等活動的）現場觀眾",
+                    phrase_examples: [
+                        { en: "The match attracted over 50,000 spectators.", zh: "這場比賽吸引了超過五萬名現場觀眾。" },
+                        { en: "Spectators were not allowed onto the pitch.", zh: "觀眾不准進入球場。" }
+                    ],
+                    collocations: ["cheering spectators", "spectator sport"], synonyms: ["onlooker", "watcher"]
+                }],
+                ielts_tip_zh: "區分不同情境的「觀眾」用字是展現精準語彙能力的關鍵。"
+            },
+            {
+                id: 94, type: "FILL", category: "Sport", source_page: 97,
+                question_en: "Football ________ caused extensive damage to the city center after their team lost the match.",
+                question_zh: "足球________（足球流氓）在他們的球隊輸掉比賽後，對市中心造成了嚴重的破壞。",
+                options: [
+                    { label: "fans", text: "球迷" },
+                    { label: "athletes", text: "運動員" },
+                    { label: "referees", text: "裁判" },
+                    { label: "hooligans", text: "流氓；阿飛" }
+                ],
+                answer: "hooligans", answer_explanation_zh: "hooligan 指「流氓、鬧事者」，football hooligans 專指常在比賽後滋事的足球流氓。",
+                key_vocabulary: [{
+                    word: "hooligan", kk: "[ˋhulɪgən]", ipa: "/ˈhuːlɪɡən/", part_of_speech: "n.", meaning_zh: "流氓；不良分子",
+                    phrase_examples: [
+                        { en: "A group of hooligans smashed the shop windows.", zh: "一群流氓砸碎了商店的櫥窗。" },
+                        { en: "The government is cracking down on football hooligans.", zh: "政府正在嚴厲打擊足球流氓。" }
+                    ],
+                    collocations: ["football hooligans"], synonyms: ["thug", "vandal", "troublemaker"]
+                }],
+                ielts_tip_zh: "Reading 中探討社會行為或運動暴力的常考名詞。"
+            },
+            {
+                id: 95, type: "MC", category: "Town & country", source_page: 98,
+                question_en: "London is a truly ________ city, with people from all over the world living there.",
+                question_zh: "倫敦是一個真正的________（國際化大都會的）城市，住著來自世界各地的人。",
+                options: [
+                    { label: "A", text: "provincial", kk: "[prəˋvɪnʃəl]" },
+                    { label: "B", text: "cosmopolitan", kk: "[ˏkɑzməˋpɑlətən]" },
+                    { label: "C", text: "suburban", kk: "[səˋbɝbən]" },
+                    { label: "D", text: "isolated", kk: "[ˋaɪs!ˏetɪd]" }
+                ],
+                answer: "B", answer_explanation_zh: "cosmopolitan 意指「世界性的、國際大都會的」，強調文化多元。",
+                key_vocabulary: [{
+                    word: "cosmopolitan", kk: "[ˏkɑzməˋpɑlətən]", ipa: "/ˌkɒzməˈpɒlɪtən/", part_of_speech: "adj.", meaning_zh: "世界性的；國際大都會的",
+                    phrase_examples: [
+                        { en: "New York is a highly cosmopolitan city.", zh: "紐約是一個高度國際化的都會。" },
+                        { en: "He has a very cosmopolitan outlook on life.", zh: "他的人生觀非常有世界觀（多元包容）。" }
+                    ],
+                    collocations: ["cosmopolitan city", "cosmopolitan atmosphere"], synonyms: ["multicultural", "international", "global"]
+                }],
+                ielts_tip_zh: "Speaking Part 1 描述自己的家鄉或喜歡的城市時極佳的形容詞。"
+            },
+            {
+                id: 96, type: "MC", category: "Town & country", source_page: 99,
+                question_en: "The hotel offers excellent ________, including a swimming pool, gym, and spa.",
+                question_zh: "這家飯店提供絕佳的________（休閒設施/便利設施），包含游泳池、健身房和水療中心。",
+                options: [
+                    { label: "A", text: "landmarks", kk: "[ˋlændˏmɑrks]" },
+                    { label: "B", text: "monuments", kk: "[ˋmɑnjəmənts]" },
+                    { label: "C", text: "amenities", kk: "[əˋmɛnətɪz]" },
+                    { label: "D", text: "outskirts", kk: "[ˋaʊtˏskɝts]" }
+                ],
+                answer: "C", answer_explanation_zh: "amenities 通常用複數，指使生活便利或舒適的「設施」，如休閒娛樂或生活機能。",
+                key_vocabulary: [{
+                    word: "amenity", kk: "[əˋmɛnətɪ]", ipa: "/əˈmiːnəti/", part_of_speech: "n.", meaning_zh: "便利設施；休閒設施",
+                    phrase_examples: [
+                        { en: "The building has excellent amenities.", zh: "這棟建築有著極佳的便利設施。" },
+                        { en: "Basic amenities like water and electricity were lacking.", zh: "缺乏水電等基本生活設施。" }
+                    ],
+                    collocations: ["local amenities", "excellent amenities", "basic amenities"], synonyms: ["facilities", "services", "conveniences"]
+                }],
+                ielts_tip_zh: "Listening 地產房仲情境或寫作描述城市規劃時必懂的名詞。"
+            },
+            {
+                id: 97, type: "MC", category: "Travel", source_page: 100,
+                question_en: "He is an ________ living in Dubai, having moved there from London ten years ago.",
+                question_zh: "他是一位住在杜拜的________（外籍人士），十年前從倫敦搬到那裡。",
+                options: [
+                    { label: "A", text: "expatriate", kk: "[ɛksˋpetrɪɪt]" },
+                    { label: "B", text: "indigenous", kk: "[ɪnˋdɪdʒɪnəs]" },
+                    { label: "C", text: "alien", kk: "[ˋeljən]" },
+                    { label: "D", text: "outcast", kk: "[ˋaʊtˏkæst]" }
+                ],
+                answer: "A", answer_explanation_zh: "expatriate (常簡稱 expat) 指「旅居國外的外籍人士」，通常因工作而外派。",
+                key_vocabulary: [{
+                    word: "expatriate", kk: "[ɛksˋpetrɪɪt]", ipa: "/eksˈpætriət/", part_of_speech: "n.", meaning_zh: "外籍人士（常指外派人員）",
+                    phrase_examples: [
+                        { en: "There is a large expatriate community in Singapore.", zh: "新加坡有一個龐大的外籍人士社群。" },
+                        { en: "American expatriates living in Paris often meet at this cafe.", zh: "住在巴黎的美國僑民常在這家咖啡館聚會。" }
+                    ],
+                    collocations: ["expatriate community", "expatriate worker"], synonyms: ["expat", "emigrant", "non-native"]
+                }],
+                ielts_tip_zh: "閱讀跨國文化或旅遊文章時常出現的進階名詞。"
+            },
+            {
+                id: 98, type: "FILL", category: "Travel", source_page: 101,
+                question_en: "We booked an ________ holiday, so our flights, hotel, and all meals were paid for in advance.",
+                question_zh: "我們預訂了________（全包式）假期，所以我們的機票、飯店和所有餐點都已預先付清。",
+                options: [
+                    { label: "exclusive", text: "獨家的" },
+                    { label: "all-inclusive", text: "全包式的" },
+                    { label: "independent", text: "獨立的" },
+                    { label: "exotic", text: "異國的" }
+                ],
+                answer: "all-inclusive", answer_explanation_zh: "all-inclusive 意指「包含一切的、全包的」，常形容將所有費用算在一起的套裝行程。",
+                key_vocabulary: [{
+                    word: "all-inclusive", kk: "[ˋɔlɪnˋklusɪv]", ipa: "/ˌɔːl ɪnˈkluːsɪv/", part_of_speech: "adj.", meaning_zh: "全包式的；包含一切的",
+                    phrase_examples: [
+                        { en: "They stayed at an all-inclusive resort in Mexico.", zh: "他們住在墨西哥的一個全包式渡假村。" },
+                        { en: "The price is £500, all-inclusive.", zh: "價格是 500 英鎊，全包在內。" }
+                    ],
+                    collocations: ["all-inclusive holiday", "all-inclusive resort"], synonyms: ["comprehensive", "fully inclusive"]
+                }],
+                ielts_tip_zh: "Listening Section 1 預定行程與機票的必考單字。"
+            },
+            {
+                id: 99, type: "MC", category: "Work", source_page: 102,
+                question_en: "Due to the economic downturn, the company had to make 500 employees ________.",
+                question_zh: "由於經濟衰退，公司不得不讓 500 名員工________（被裁員/成為多餘的）。",
+                options: [
+                    { label: "A", text: "promoted", kk: "[prəˋmotɪd]" },
+                    { label: "B", text: "redundant", kk: "[rɪˋdʌndənt]" },
+                    { label: "C", text: "resigned", kk: "[rɪˋzaɪnd]" },
+                    { label: "D", text: "recruited", kk: "[rɪˋkrutɪd]" }
+                ],
+                answer: "B", answer_explanation_zh: "make someone redundant 是英式英語中「裁員」的標準說法，因為職位不再需要而解僱。",
+                key_vocabulary: [{
+                    word: "redundant", kk: "[rɪˋdʌndənt]", ipa: "/rɪˈdʌndənt/", part_of_speech: "adj.", meaning_zh: "被裁減的；多餘的",
+                    phrase_examples: [
+                        { en: "He was made redundant last year.", zh: "他去年被裁員了。" },
+                        { en: "New technology often makes old skills redundant.", zh: "新科技常使舊技能變得多餘。" }
+                    ],
+                    collocations: ["make someone redundant", "become redundant"], synonyms: ["laid off", "unnecessary", "superfluous"]
+                }],
+                ielts_tip_zh: "職場主題 (Work & Business) 的核心用字，在英國非常常用。"
+            },
+            {
+                id: 100, type: "MC", category: "Work", source_page: 104,
+                question_en: "Bonus payments provide a good ________ for staff to work harder.",
+                question_zh: "獎金發放為員工提供了更努力工作的良好________（誘因/動機）。",
+                options: [
+                    { label: "A", text: "penalty", kk: "[ˋpɛn!tɪ]" },
+                    { label: "B", text: "obstacle", kk: "[ˋɑbstək!]" },
+                    { label: "C", text: "incentive", kk: "[ɪnˋsɛntɪv]" },
+                    { label: "D", text: "appraisal", kk: "[əˋprez!]" }
+                ],
+                answer: "C", answer_explanation_zh: "incentive 指「誘因、刺激、鼓勵」，能促使人採取行動的事物。",
+                key_vocabulary: [{
+                    word: "incentive", kk: "[ɪnˋsɛntɪv]", ipa: "/ɪnˈsentɪv/", part_of_speech: "n.", meaning_zh: "誘因；動機；獎勵",
+                    phrase_examples: [
+                        { en: "Tax incentives have been very effective in encouraging people to save.", zh: "稅收優惠（誘因）在鼓勵人們儲蓄方面非常有效。" },
+                        { en: "There is little incentive for them to improve the service.", zh: "他們幾乎沒有改善服務的動力（誘因）。" }
+                    ],
+                    collocations: ["provide an incentive", "financial incentive", "tax incentive"], synonyms: ["motivation", "encouragement", "stimulus"]
+                }],
+                ielts_tip_zh: "寫作探討政策如何鼓勵特定行為時 (如政府提供誘因鼓勵環保)，極具說服力的名詞。"
+            }
+        ];
+
+        // ================= 應用程式狀態管理 =================
+        let settings = {
+            accent: 'en-US', // 美式 en-US 或 英式 en-GB
+            rate: 0.9,       // 語速
+            dark: false      // 深色模式
+        };
+
+        let state = {
+            mode: 'ALL',     // 'ALL' 或 'MISTAKES'
+            currentIndex: 0,
+            answers: {},     // { qId: { isCorrect: boolean, userAnswer: string } }
+            mistakes: new Set(),
+            selectedOption: null, // 暫存當前選中的選項
+            submitted: false      // 當前題目是否已提交
+        };
+
+        let activeQuestions = questionsData;
+
+        // ================= 初始化與 UI 更新 =================
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+
+        function initApp() {
+            // 讀取本地主題偏好 (如果有)
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                settings.dark = true;
+                document.documentElement.classList.add('dark');
+            }
+            renderSidebar();
+            renderQuestion();
+        }
+
+        function updateSettings() {
+            settings.accent = document.getElementById('setting-accent').value;
+            settings.rate = parseFloat(document.getElementById('setting-speed').value);
+        }
+
+        function toggleDarkMode() {
+            settings.dark = !settings.dark;
+            if (settings.dark) document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('sidebar-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function switchMode(mode) {
+            state.mode = mode;
+            if (mode === 'MISTAKES') {
+                activeQuestions = questionsData.filter(q => state.mistakes.has(q.id));
+                if (activeQuestions.length === 0) {
+                    alert('目前沒有錯題！繼續保持！');
+                    switchMode('ALL');
+                    return;
+                }
+            } else {
+                activeQuestions = questionsData;
+            }
+            state.currentIndex = 0;
+            renderSidebar();
+            renderQuestion();
+        }
+
+        function renderSidebar() {
+            const btnAll = document.getElementById('btn-mode-all');
+            const btnMistakes = document.getElementById('btn-mode-mistakes');
+            
+            if (state.mode === 'ALL') {
+                btnAll.className = "w-full text-left font-bold p-2 rounded bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200";
+                btnMistakes.className = "w-full text-left font-bold p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700";
+            } else {
+                btnAll.className = "w-full text-left font-bold p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700";
+                btnMistakes.className = "w-full text-left font-bold p-2 rounded bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200";
+            }
+
+            document.getElementById('mistake-count').innerText = state.mistakes.size;
+
+            // 計算進度
+            const total = activeQuestions.length;
+            let answeredCount = 0;
+            let correctCount = 0;
+
+            activeQuestions.forEach(q => {
+                if (state.answers[q.id]) {
+                    answeredCount++;
+                    if (state.answers[q.id].isCorrect) correctCount++;
+                }
+            });
+
+            const accuracy = answeredCount === 0 ? 0 : Math.round((correctCount / answeredCount) * 100);
+            const progressPercent = total === 0 ? 0 : (answeredCount / total) * 100;
+
+            document.getElementById('progress-bar-fill').style.width = `${progressPercent}%`;
+            document.getElementById('progress-text').innerText = `${answeredCount}/${total}`;
+            document.getElementById('accuracy-text').innerText = `${accuracy}%`;
+        }
+
+        function renderQuestion() {
+            if (activeQuestions.length === 0) return;
+
+            const q = activeQuestions[state.currentIndex];
+            state.selectedOption = null;
+            state.submitted = !!state.answers[q.id];
+
+            // 頂部狀態更新
+            document.getElementById('header-title').innerText = `Question ${state.currentIndex + 1} of ${activeQuestions.length}`;
+            document.getElementById('badge-type').innerText = q.type;
+            document.getElementById('badge-category').innerText = q.category;
+
+            // 題目本體
+            document.getElementById('q-en').innerHTML = formatQuestionEn(q.question_en);
+            document.getElementById('q-zh').innerText = q.question_zh;
+
+            // 選項區
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+
+            if (q.type === 'WORD_FORM') {
+                const val = state.submitted ? state.answers[q.id].userAnswer : '';
+                const disabled = state.submitted ? 'disabled' : '';
+                optsContainer.innerHTML = `
+                    <input type="text" id="input-word" value="${val}" ${disabled}
+                        class="w-full md:w-1/2 p-3 border rounded text-lg focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        placeholder="請輸入單字..." oninput="state.selectedOption = this.value">
+                `;
+            } else {
+                // MC, TF, FILL, MATCH 皆轉化為按鈕選項
+                q.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = `w-full text-left p-4 rounded-lg border-2 transition-all flex flex-col md:flex-row md:items-center gap-2
+                        ${state.submitted ? 'cursor-default' : 'cursor-pointer hover:border-blue-300 dark:hover:border-blue-600'}`;
+                    
+                    // 根據狀態設定顏色
+                    if (state.submitted) {
+                        const isSelected = state.answers[q.id].userAnswer === (opt.label === q.answer || opt.label.length > 1 ? opt.label : opt.label); 
+                        // Note: For MC/MATCH it's label 'A', for FILL it's label text. 
+                        const isCorrectOpt = (opt.label === q.answer || opt.label === q.answer); // Simplify
+                        
+                        let matchValue = q.type === 'FILL' ? opt.label : opt.label;
+                        const isThisSelected = state.answers[q.id].userAnswer === matchValue;
+                        const isThisCorrect = matchValue === q.answer;
+
+                        if (isThisCorrect) {
+                            btn.classList.add('bg-green-50', 'border-green-500', 'dark:bg-green-900/30');
+                        } else if (isThisSelected && !isThisCorrect) {
+                            btn.classList.add('bg-red-50', 'border-red-500', 'dark:bg-red-900/30');
+                        } else {
+                            btn.classList.add('bg-white', 'border-gray-200', 'dark:bg-gray-800', 'dark:border-gray-700');
+                        }
+                    } else {
+                        btn.classList.add('bg-white', 'border-gray-200', 'dark:bg-gray-800', 'dark:border-gray-700');
+                        btn.onclick = () => selectOption(opt.label, btn);
+                    }
+
+                    let optLabelHtml = q.type === 'MC' || q.type === 'MATCH' ? `<span class="font-bold text-lg min-w-[2rem]">${opt.label}.</span>` : '';
+                    let kkHtml = opt.kk ? `<span class="text-sm font-mono-kk text-gray-500 dark:text-gray-400 ml-auto">${opt.kk}</span>` : '';
+                    
+                    btn.innerHTML = `${optLabelHtml} <span class="text-lg text-gray-800 dark:text-gray-200">${opt.text}</span> ${kkHtml}`;
+                    optsContainer.appendChild(btn);
+                });
+            }
+
+            // 按鈕與解析狀態
+            const submitBtn = document.getElementById('btn-submit');
+            const expCard = document.getElementById('explanation-card');
+            
+            if (state.submitted) {
+                submitBtn.classList.add('hidden');
+                expCard.classList.remove('hidden');
+                renderExplanation(q);
+            } else {
+                submitBtn.classList.remove('hidden');
+                expCard.classList.add('hidden');
+            }
+
+            // 回到頂部
+            document.getElementById('quiz-scroll-area').scrollTop = 0;
+        }
+
+        function formatQuestionEn(text) {
+            return text.replace(/_+/g, '<span class="text-blue-600 dark:text-blue-400 font-bold border-b-2 border-blue-600 dark:border-blue-400 px-2">______</span>');
+        }
+
+        function selectOption(val, btnElement) {
+            if (state.submitted) return;
+            state.selectedOption = val;
+            
+            const container = document.getElementById('options-container');
+            Array.from(container.children).forEach(child => {
+                child.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/30', 'dark:border-blue-500');
+                child.classList.add('border-gray-200', 'dark:border-gray-700');
+            });
+            
+            btnElement.classList.remove('border-gray-200', 'dark:border-gray-700');
+            btnElement.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/30', 'dark:border-blue-500');
+        }
+
+        function submitAnswer() {
+            const q = activeQuestions[state.currentIndex];
+            
+            // WORD_FORM 特殊處理，抓取 input 值
+            if (q.type === 'WORD_FORM') {
+                const input = document.getElementById('input-word');
+                if (input) state.selectedOption = input.value.trim().toLowerCase();
+            }
+
+            if (!state.selectedOption) {
+                alert('請先選擇或輸入答案！');
+                return;
+            }
+
+            const isCorrect = state.selectedOption === q.answer || (q.type === 'WORD_FORM' && state.selectedOption === q.answer.toLowerCase());
+            
+            state.answers[q.id] = {
+                isCorrect: isCorrect,
+                userAnswer: state.selectedOption
+            };
+
+            if (!isCorrect) {
+                state.mistakes.add(q.id);
+            } else {
+                state.mistakes.delete(q.id);
+            }
+
+            state.submitted = true;
+            renderSidebar();
+            renderQuestion(); // 重新渲染以顯示對錯顏色和解析
+        }
+
+        function renderExplanation(q) {
+            const isCorrect = state.answers[q.id].isCorrect;
+            const resultBanner = document.getElementById('result-banner');
+            
+            if (isCorrect) {
+                resultBanner.innerHTML = `<span class="text-2xl">✅</span> <span class="text-green-600 dark:text-green-400">答對了！</span>`;
+            } else {
+                resultBanner.innerHTML = `<span class="text-2xl">❌</span> <span class="text-red-600 dark:text-red-400">答錯了。正確答案是：${q.answer}</span>`;
+            }
+
+            document.getElementById('exp-text').innerText = q.answer_explanation_zh;
+
+            const vocabSection = document.getElementById('vocab-section');
+            vocabSection.innerHTML = '';
+
+            q.key_vocabulary.forEach(v => {
+                let examplesHtml = v.phrase_examples.map(ex => `
+                    <div class="mt-2 pl-3 border-l-4 border-gray-200 dark:border-gray-600">
+                        <p class="text-gray-800 dark:text-gray-200 font-serif-en">${ex.en} 
+                            <button onclick="speakText('${ex.en.replace(/'/g, "\\'")}')" class="text-lg hover:scale-110 transition-transform ml-1">🔊</button>
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">${ex.zh}</p>
+                    </div>
+                `).join('');
+
+                let collHtml = v.collocations && v.collocations.length > 0 ? `<div class="mt-3 text-sm"><span class="font-bold text-gray-600 dark:text-gray-300">🔗 搭配詞：</span> <span class="text-gray-700 dark:text-gray-200">${v.collocations.join(', ')}</span></div>` : '';
+                let synHtml = v.synonyms && v.synonyms.length > 0 ? `<div class="mt-1 text-sm"><span class="font-bold text-gray-600 dark:text-gray-300">🔄 同義字：</span> <span class="text-gray-700 dark:text-gray-200">${v.synonyms.join(', ')}</span></div>` : '';
+
+                vocabSection.innerHTML += `
+                    <div class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                        <div class="flex items-end gap-3 mb-2 flex-wrap">
+                            <h3 class="text-xl font-bold text-primary dark:text-blue-400">${v.word}</h3>
+                            <button onclick="speakText('${v.word.replace(/'/g, "\\'")}')" class="text-xl hover:scale-110 transition-transform">🔊</button>
+                            <span class="text-gray-500 font-mono-kk">${v.kk}</span>
+                            <span class="text-gray-400 text-sm">IPA: ${v.ipa}</span>
+                            <span class="px-2 py-0.5 bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 text-xs rounded">${v.part_of_speech}</span>
+                        </div>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium mb-3">${v.meaning_zh}</p>
+                        ${examplesHtml}
+                        ${collHtml}
+                        ${synHtml}
+                    </div>
+                `;
+            });
+
+            if (q.ielts_tip_zh) {
+                vocabSection.innerHTML += `
+                    <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded flex gap-3 items-start">
+                        <span class="text-xl">💡</span>
+                        <p class="text-sm text-yellow-800 dark:text-yellow-200">${q.ielts_tip_zh}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ================= 導航與功能 =================
+        function nextQuestion() {
+            if (state.currentIndex < activeQuestions.length - 1) {
+                state.currentIndex++;
+                renderQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (state.currentIndex > 0) {
+                state.currentIndex--;
+                renderQuestion();
+            }
+        }
+
+        function randomQuestion() {
+            state.currentIndex = Math.floor(Math.random() * activeQuestions.length);
+            renderQuestion();
+        }
+
+        function resetProgress() {
+            if(confirm('確定要清除所有答題紀錄嗎？')) {
+                state.answers = {};
+                state.mistakes.clear();
+                if(state.mode === 'MISTAKES') switchMode('ALL');
+                else {
+                    state.currentIndex = 0;
+                    renderSidebar();
+                    renderQuestion();
+                }
+            }
+        }
+
+        // ================= 發音 API (Web Speech API) =================
+        function speakCurrentQuestion() {
+            const q = activeQuestions[state.currentIndex];
+            // 把底線換成 "blank" 發音
+            let textToSpeak = q.question_en.replace(/_+/g, " blank ");
+            speakText(textToSpeak);
+        }
+
+        function speakText(text) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = settings.accent; 
+            utterance.rate = settings.rate;
+            
+            const voices = window.speechSynthesis.getVoices();
+            const preferred = voices.find(v => v.lang === utterance.lang && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Aria')));
+            if (preferred) utterance.voice = preferred;
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // 確保載入聲音
+        window.speechSynthesis.onvoiceschanged = () => {};
+
+    </script>
+</body>
+</html>
